@@ -5,19 +5,23 @@ from random import choice
 from typing import List
 
 from midi.Note import *
-from param import *
+from parameter.const import *
 
 class Track:
     """A wrapper for mido.MidiTrack."""
     
-    def __init__(self, instrument: int = 0, key: Key_T = 'C'):
+    def __init__(self, instrument: int = 0, key: Key_T = "C"):
         self.instrument = instrument
         self.key = key
-        self.note: list[Note] = []
+        self.note: List[Note] = []
     
     def __str__(self):  # used for debug
         meta_msg = f"Key: {self.key}\nInstrument: {self.instrument}\n"
-        note_msg = '\n'.join([str(note) for note in self.note])
+        bars = self.split_into_bars()
+        note_msg = ""
+        for idx, bar in enumerate(bars):
+            note_msg += f"\n-------------------  Bar {idx + 1}\n"
+            note_msg += "\n".join(str(note) for note in bar)
         return meta_msg + note_msg
     
     def print_brief_info(self):
@@ -36,18 +40,19 @@ class Track:
         time = 0
         note_dict = {}  # pitch -> (start_time, velocity)
         for msg in track:
-            if msg.type == 'program_change':
+            if msg.type == "program_change":
                 ga_track.instrument = msg.program
-            elif msg.type == 'key_signature':
+            elif msg.type == "key_signature":
                 ga_track.key = msg.key
-            elif msg.type == 'note_on':
+            elif msg.type == "note_on":
                 time += msg.time
                 note_dict[msg.note] = (time, msg.velocity)
-            elif msg.type == 'note_off':
+            elif msg.type == "note_off":
                 time += msg.time
                 start_time, velocity = note_dict.pop(msg.note)
                 ga_track.note.append(
-                    Note(msg.note, time - start_time, start_time, velocity))
+                    Note(msg.note, time - start_time, start_time, velocity)
+                )
         return ga_track
     
     def to_track(self) -> mido.MidiTrack:
@@ -55,10 +60,10 @@ class Track:
         Available for chords."""
         
         midi_track = mido.MidiTrack()
-        midi_track.append(mido.MetaMessage(
-            'key_signature', key=self.key, time=0))
-        midi_track.append(mido.Message(
-            'program_change', program=self.instrument, time=0))
+        midi_track.append(mido.MetaMessage("key_signature", key=self.key, time=0))
+        midi_track.append(
+            mido.Message("program_change", program=self.instrument, time=0)
+        )
         
         event_set = set()  # (time, 0/1(note_off/on), note)
         for note in self.note:
@@ -68,66 +73,51 @@ class Track:
         sorted_time = sorted(event_set, key=lambda x: (x[0], x[1]))
         
         last_time = 0
-        for time, event_num, note in sorted_time:
-            event = 'note_on' if event_num else 'note_off'
+        for event_time, event_num, note in sorted_time:
+            event = "note_on" if event_num else "note_off"
             msg = mido.Message(
-                event, note=note.pitch, velocity=note.velocity, time=time - last_time)
+                event,
+                note=note.pitch,
+                velocity=note.velocity,
+                time=event_time - last_time,
+            )
             midi_track.append(msg)
-            last_time = time
+            last_time = event_time
         return midi_track
     
-    def generate_random_track(self, bar: int):
-        """Generate a random track with the given bar length."""
-        for i in range(bar):
-            length = BAR_LENGTH
-            while length > 0:
-                l = choice(NOTE_LENGTH)
-                if l <= length:
-                    pitch = Note.random_pitch_in_mode(self.key)
-                    note = Note(pitch, l, (i + 1) * BAR_LENGTH - length)
-                    length -= l
-                    self.note.append(note)
-        return self
-    
-    def _recommend_length(left_length: int):
-        # Recommend a length for the note with the given left length.
-        # For example, if left_length is 3.5, it's better to give a eighth note,
-        # because it can align with the beat.
-        pass
-    
-    def generate_random_track_plus(self, bar: int):
-        """Generate a random track with the given bar length.
-        The track has a better rhythm."""
-        for i in range(bar - 1):
-            length = BAR_LENGTH
-            while length > 0:
-                if length % QUARTER != 0:
-                    # if the beat is not full, we recommend a quarter note or a eighth note
-                    l = choice([QUARTER, EIGHTH])
-                else:
-                    l = choice(NOTE_LENGTH)
-                if l <= length:
-                    pitch = Note.random_pitch_in_mode(self.key)
-                    note = Note(pitch, l, (i + 1) * BAR_LENGTH - length)
-                    length -= l
-                    self.note.append(note)
-        
-        # For the last bar, we need to make sure that the last note is a half note
-        # We also want the pitch of the last note is the tonic
-        length = BAR_LENGTH
-        while length > HALF:
-            l = choice(NOTE_LENGTH)
-            if l <= length - HALF:
-                pitch = Note.random_pitch_in_mode(self.key)
-                note = Note(pitch, l, bar * BAR_LENGTH - length)
-                length -= l
-                self.note.append(note)
+    def generate_random_pitch_on_rhythm(self, track: "Track"):
+        """Generate random pitches on the given track with rhythm."""
+        for note in track.note:
+            note.pitch = Note.random_pitch_in_mode(self.key)
+        # We want the pitch of the last note is the tonic
         while True:
             pitch = Note.random_pitch_in_mode(self.key)
             if Note.ord_in_mode(self.key, pitch) == 1:
-                break
-        note = Note(pitch, HALF, bar * BAR_LENGTH - HALF)
+                track.note[-1].pitch = pitch
+                return track
+    
+    def generate_random_track(self, bar_number: int):
+        """Generate a random track with the given bar number"""
+        for i in range(bar_number - 1):
+            length = BAR_LENGTH
+            while length > 0:
+                note_length = choice(NOTE_LENGTH)
+                if note_length <= length:
+                    note = Note(0, note_length, (i + 1) * BAR_LENGTH - length)
+                    length -= note_length
+                    self.note.append(note)
+        
+        # For the last bar, we want to make sure that the last note is a half note
+        length = BAR_LENGTH
+        while length > HALF:
+            note_length = choice(NOTE_LENGTH)
+            if note_length <= length - HALF:
+                note = Note(0, note_length, bar_number * BAR_LENGTH - length)
+                length -= note_length
+                self.note.append(note)
+        note = Note(0, HALF, bar_number * BAR_LENGTH - HALF)
         self.note.append(note)
+        self.generate_random_pitch_on_rhythm(self)
         return self
     
     def split_into_bars(self) -> List[List[Note]]:
@@ -177,5 +167,5 @@ class Track:
     def retrograde(self):
         """Retrograde the track"""
         for note in self.note:
-            note.start_time = self.full_length - note.start_time - note.length
+            note.start_time = self.full_length - note.end_time
         self.note.reverse()

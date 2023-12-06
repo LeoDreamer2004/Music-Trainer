@@ -1,6 +1,5 @@
 from copy import deepcopy
 from random import choice, randint, random
-from typing import List
 import numpy as np
 from .base import *
 

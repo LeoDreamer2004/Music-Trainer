@@ -1,4 +1,3 @@
-from typing import List
 from random import choice, randint, random
 from .base import *
 from copy import deepcopy

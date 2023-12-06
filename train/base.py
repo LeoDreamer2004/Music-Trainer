@@ -1,5 +1,5 @@
-from abc import ABCMeta, abstractmethod
 import sys
+from abc import ABCMeta, abstractmethod
 
 from random import random
 from typing import List

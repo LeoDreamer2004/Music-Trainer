@@ -16,10 +16,10 @@ omicron = 0.1
 rhythm_target = 3.5
 
 # rate of four types of mutation
-mutation_rate_1: int = 1  # Swap two notes' length
-mutation_rate_2: int = 5  # Split a note into two notes
-mutation_rate_3: int = 1  # Merge two notes into one note
-mutation_rate_4: int = 2  # Copy a bar and paste it to another bar
+mutation_rate_1 = 1  # Swap two notes' length
+mutation_rate_2 = 5  # Split a note into two notes
+mutation_rate_3 = 1  # Merge two notes into one note
+mutation_rate_4 = 2  # Copy a bar and paste it to another bar
 
 
 class RyhthmParameter(TrackParameterBase):

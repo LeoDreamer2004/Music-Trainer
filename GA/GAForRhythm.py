@@ -32,6 +32,11 @@ class GAForRhythm:
         fitness += param.echo * delta
         # give punishment if there are strong notes on weak beats
         fitness -= param.strong_notes_on_weak_beats * epsilon
+        # give punishment if there are too many long notes
+        fitness -= param.long_notes * omiga
+        # give punishment if there are too many neighboring notes
+        # with large length gap
+        fitness -= param.neighboring_notes * omicron
         return fitness
     
     def select(self):
@@ -61,16 +66,16 @@ class GAForRhythm:
             track = deepcopy(
                 self.population[choice([self.best_index, self.second_index])]
             )
-            mutate_type = randint(1, 4)
+            mutate_type = randint(1, mutation_rate_1 + mutation_rate_2 + mutation_rate_3 + mutation_rate_4)
             # When mutating, do not change the last note pitch,
             # because we want the last note to be the tonic.
             # Meanwhile, do not change the first note pitch in every bar,
             # in case of empty bars.
-            if mutate_type == 1:
+            if mutate_type <= mutation_rate_1:
                 self._mutate_1(track)
-            elif mutate_type == 2:
+            elif mutate_type <= mutation_rate_1 + mutation_rate_2:
                 self._mutate_2(track)
-            elif mutate_type == 3:
+            elif mutate_type <= mutation_rate_1 + mutation_rate_2 + mutation_rate_3:
                 self._mutate_3(track)
             else:
                 self._mutate_4(track)
@@ -78,7 +83,7 @@ class GAForRhythm:
     
     @staticmethod
     def _mutate_1(track: Track):
-        # Swap two notes' length
+        """Swap two notes' length"""
         idx = randint(0, len(track.note) - 3)
         note1, note2 = track.note[idx], track.note[idx + 1]
         if note2.start_time // BAR_LENGTH != note1.start_time // BAR_LENGTH:
@@ -90,7 +95,8 @@ class GAForRhythm:
     
     @staticmethod
     def _mutate_2(track: Track):
-        # Split a note into two notes
+        """Split a note into two notes"""
+        # TODO: split long notes first to accelerate evolution speed
         idx = randint(0, len(track.note) - 2)
         note = track.note[idx]
         if note.length == EIGHTH:  # We can't split it
@@ -106,7 +112,7 @@ class GAForRhythm:
     
     @staticmethod
     def _mutate_3(track: Track):
-        # merge two notes into one note
+        """Merge two notes into one note"""
         idx = randint(0, len(track.note) - 3)
         note = track.note[idx]
         if track.note[idx + 1].start_time % BAR_LENGTH == 0:
@@ -117,7 +123,7 @@ class GAForRhythm:
     
     @staticmethod
     def _mutate_4(track: Track):
-        # copy a bar and paste it to another bar
+        """Copy a bar and paste it to another bar"""
         idx = randint(2, track.bar_number - 1)
         bars = track.split_into_bars()
         bars[idx - 2] = deepcopy(bars[idx])

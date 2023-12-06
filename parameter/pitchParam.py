@@ -15,8 +15,8 @@ with_accompaniment = False
 # Parameters for the genetic algorithm
 # ----------------------------------------------------
 
-mutation_rate = 0.2
-iteration_num = 5000
+mutation_rate = 0.1
+iteration_num = 20000
 population_size = 10
 
 # ----------------------------------------------------
@@ -45,13 +45,13 @@ interval_value_dict = {
 
 large_interval_value = 5
 # the weight for mean, standard deviation of intervals
-alpha, beta, delta = 1, 4, 0.1
+alpha, beta, delta = 1, 4, 0.2
 # the weight for bad notes (outside the mode)
 gamma = 0.5
 mean_coeff = np.array([2, 1, 1, 1, 1, 1, 1, 2])
 standard_coeff = np.array([1, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 1])
 # the target value
-pitch_target = 2.5
+pitch_target = 4.5
 
 # rate of three types of mutation
 mutation_rate_1: int = 2

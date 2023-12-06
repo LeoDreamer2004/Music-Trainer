@@ -19,6 +19,8 @@ class TrackParameter:
         # rhythm parameters
         self.strong_beats = 0
         self.echo = 0.
+        self.long_notes = 0.
+        self.neighboring_notes = 0.
         self.strong_notes_on_weak_beats = 0.
     
     @staticmethod
@@ -35,6 +37,7 @@ class TrackParameter:
     def update_rhythm_parameters(self):
         self._update_beats()
         self._update_echo()
+        self._update_long_notes()
     
     def _update_interval_parameters(self):
         for idx, bar in enumerate(self.bars):
@@ -67,6 +70,7 @@ class TrackParameter:
                 diff1 = bar[idx + 1].pitch - bar[idx].pitch
                 diff2 = bar[idx + 2].pitch - bar[idx + 1].pitch
                 if abs(diff1 - diff2) <= 2 and diff1 * diff2 > 0 and (diff1 != 0 or diff2 != 0):
+                    # diff1 and diff2 should have the same sign and should not be all 0
                     score_in_bar += 1
             self.three_note_score += len(bar) / ((score_in_bar + 1) * 3)
     
@@ -100,6 +104,22 @@ class TrackParameter:
             self.echo += self._rhythm_similarity_of_bars(
                 self.bars[bar + 1], self.bars[bar + 3]
             )
+    
+    def _update_long_notes(self):
+        self.long_notes = 0
+        for bar in self.bars:
+            for note in bar:
+                if note.length == HALF:
+                    self.long_notes += 1
+                elif note.length >= QUARTER:
+                    self.long_notes += 0.15
+    
+    def _update_neighboring_notes(self):
+        self.neighboring_notes = 0
+        notes = self.track.note
+        for idx in range(len(notes) - 1):
+            if abs(notes[idx].length - notes[idx + 1].length) == HALF - EIGHTH:
+                self.neighboring_notes += 1
     
     @staticmethod
     def _rhythm_similarity_of_bars(bar1: List[Note], bar2: List[Note]):

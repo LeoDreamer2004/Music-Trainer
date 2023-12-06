@@ -1,48 +1,93 @@
-from copy import deepcopy
-from random import choice, randint, random
-from midi.Track import Track
-from midi.Note import Note
 from typing import List
-from parameter.const import *
-from parameter.rhythmParam import *
-from GA.TrackParameter import TrackParameter
+from random import choice, randint, random
+from .base import *
+from copy import deepcopy
+
+# the weight for strong beats
+theta = 0.5
+# the weight for echo
+delta = 1
+# pass
+epsilon = 0.3
+# the target value
+rhythm_target = 3.0
 
 
-class GAForRhythm:
+class RyhthmParameter(TrackParameterBase):
+    """Used to calculate parameters of the tracks"""
+
+    def __init__(self, track: Track) -> None:
+        super().__init__(track)
+        self.strong_beats = 0
+        self.echo = 0.0
+        self.strong_notes_on_weak_beats = 0.0
+        self.update_parameters()
+
+    def update_parameters(self):
+        self._update_beats()
+        self._update_echo()
+
+    def _update_beats(self):
+        self.strong_beats = 0
+        self.strong_notes_on_weak_beats = 0
+        for bar in self.bars:
+            bad_beats = 0
+            for note in bar:
+                if note.start_time % HALF == 0:
+                    self.strong_beats += 1
+                # elif note.start_time % QUARTER == 0:
+                # self.weak_beats += 1
+                elif note.start_time % note.length != 0:
+                    bad_beats += 1
+            self.strong_notes_on_weak_beats += bad_beats / len(bar)
+
+    def _update_echo(self):
+        # Bar 0 and 2; 1 and 3; 4 and 6; 5 and 7 are echo, etc.
+        # If they have the similar rhythm, the echo will be higher
+        for bar in range(0, self.bar_number, 4):
+            self.echo += self._rhythm_similarity_of_bars(
+                self.bars[bar], self.bars[bar + 2]
+            )
+            self.echo += self._rhythm_similarity_of_bars(
+                self.bars[bar + 1], self.bars[bar + 3]
+            )
+
+    @staticmethod
+    def _rhythm_similarity_of_bars(bar1: List[Note], bar2: List[Note]):
+        """Calculate the similarity of the rhythm of two bars."""
+        same = 0
+        for note1 in bar1:
+            for note2 in bar2:
+                if (note1.start_time - note2.start_time) % BAR_LENGTH == 0:
+                    same += 1
+        return (same**2) / (len(bar1) * len(bar2))
+
+
+class GAForRhythm(TrackGABase):
     def __init__(self, population: List[Track], mutation_rate: float):
-        self.population = population
-        self.bar_number = population[0].bar_number
-        self.mutation_rate = mutation_rate
-        self.fitness = [0] * len(population)
-        self._update_fitness()
-        self.best_index, self.second_index = 0, 0
-    
-    def _update_fitness(self):
-        for idx, track in enumerate(self.population):
-            self.fitness[idx] = self._get_fitness(track)
-    
-    def _get_fitness(self, track: Track) -> float:
+        super().__init__(population, mutation_rate)
+        self.update_fitness()
+
+    def get_fitness(self, track: Track) -> float:
         # It's better to have a higher fitness
         fitness = 0
         # give punishment if the number of strong beats is not enough
-        param = TrackParameter(track)
-        param.update_rhythm_parameters()
+        param = RyhthmParameter(track)
         fitness += (param.strong_beats - 2 * self.bar_number) * theta
         # give encouragement if echo is high
         fitness += param.echo * delta
         # give punishment if there are strong notes on weak beats
         fitness -= param.strong_notes_on_weak_beats * epsilon
         return fitness
-    
+
     def select(self):
-        self._update_fitness()
         for i in range(len(self.fitness)):
             if self.fitness[i] > self.fitness[self.best_index]:
                 self.best_index = i
                 self.second_index = self.best_index
             elif self.fitness[i] > self.fitness[self.second_index]:
                 self.second_index = i
-    
+
     def crossover(self):
         for i in range(len(self.population)):
             index1 = self.best_index if randint(0, 1) else self.second_index
@@ -52,7 +97,7 @@ class GAForRhythm:
             cross_point = randint(0, self.bar_number // 2 - 1) * 2
             bars = bars1[:cross_point] + bars2[cross_point:]
             self.population[i] = self.population[i].join_bars(bars)
-    
+
     def mutate(self):
         for i in range(len(self.population)):
             if random() > self.mutation_rate:
@@ -75,7 +120,7 @@ class GAForRhythm:
             else:
                 self._mutate_4(track)
             self.population[i] = track
-    
+
     @staticmethod
     def _mutate_1(track: Track):
         # Swap two notes' length
@@ -87,7 +132,7 @@ class GAForRhythm:
         end = note2.end_time
         note1.length, note2.length = note2.length, note1.length
         note2.start_time = end - note2.length
-    
+
     @staticmethod
     def _mutate_2(track: Track):
         # Split a note into two notes
@@ -103,7 +148,7 @@ class GAForRhythm:
                 new_note = Note(note.pitch, length, end - length, note.velocity)
                 track.note.insert(idx + 1, new_note)
                 return
-    
+
     @staticmethod
     def _mutate_3(track: Track):
         # merge two notes into one note
@@ -114,7 +159,7 @@ class GAForRhythm:
             return
         note.length = track.note[idx + 1].end_time - note.start_time
         track.note.pop(idx + 1)
-    
+
     @staticmethod
     def _mutate_4(track: Track):
         # copy a bar and paste it to another bar
@@ -124,25 +169,20 @@ class GAForRhythm:
         for note in bars[idx - 2]:
             note.start_time -= BAR_LENGTH * 2
         track.join_bars(bars)
-    
-    def show_info(self):
-        print("Now the best fitness is", self.fitness[self.best_index])
-    
+
     def run(self, generation):
         print("Start training for rhythm...")
         for i in range(generation):
             if i % 10 == 0:
                 print(f"Rhythm generation {i}:", end=" ")
                 self.show_info()
-            self.select()
-            self.crossover()
-            self.mutate()
-            
+            self.epoch()
+
             if self.fitness[self.best_index] > rhythm_target:
                 print(f"[!] Target reached at generation {i}")
                 print(f"final fitness for rhythm: {self.fitness[self.best_index]}")
                 return self.population[self.best_index]
-        
+
         print(f"[!] Target not reached after {generation} generations")
         print(f"final fitness for rhythm: {self.fitness[self.best_index]}")
         return self.population[self.best_index]

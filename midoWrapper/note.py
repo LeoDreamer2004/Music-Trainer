@@ -1,5 +1,4 @@
-from parameter.const import *
-
+from .musicSettings import *
 from typing import Literal, Union
 from random import randint
 
@@ -44,22 +43,22 @@ minor_offset = (0, 2, 3, 5, 7, 8, 10)
 
 class Note:
     def __init__(
-            self, pitch: Pitch_T, length: int, start_time: int, velocity: int = VELOCITY
+        self, pitch: Pitch_T, length: int, start_time: int, velocity: int = VELOCITY
     ):
         # Here the "time" is "tick" in mido actually
         self.pitch = pitch
         self.length = length
         self.start_time = start_time
         self.velocity = velocity
-    
+
     def __str__(self):
         pitch = self.pitch_to_name(self.pitch)
         return f"{pitch}: length={self.length} start={self.start_time} velocity={self.velocity}"
-    
+
     @property
     def end_time(self):
         return self.start_time + self.length
-    
+
     @staticmethod
     def in_mode(pitch: Pitch_T, key: Key_T):
         """judge if the note is in the given mode."""
@@ -71,7 +70,7 @@ class Note:
             # major mode
             base = note_name_dict[key]
             return (pitch - base) % 12 in major_offset
-    
+
     @staticmethod
     def random_pitch_in_mode(key: Key_T):
         """Generate a random note in the given mode."""
@@ -79,7 +78,7 @@ class Note:
             pitch = randint(NOTE_MIN, NOTE_MAX)
             if Note.in_mode(pitch, key):
                 return pitch
-    
+
     @staticmethod
     def ord_in_mode(key: Key_T, pitch: Pitch_T):
         """Get the order of the note in the given mode.
@@ -92,7 +91,7 @@ class Note:
             # major mode
             base = note_name_dict[key]
             return major_offset.index((pitch - base) % 12) + 1
-    
+
     @staticmethod
     def name_to_pitch(note_name: str) -> Pitch_T:
         """Convert a note name to a pitch.
@@ -101,7 +100,7 @@ class Note:
         name = note_name[:-1]
         pitch = note_name_dict[name]
         return (int(octave) + 1) * 12 + pitch
-    
+
     @staticmethod
     def pitch_to_name(pitch: Pitch_T) -> str:
         """Convert a pitch to a note name.

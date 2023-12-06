@@ -9,6 +9,7 @@ sys.path.append("..")
 
 
 def choice_with_weight(choices_list: List, weighted_list: List[float]):
+    """Randomly choose an element from choices_list with weight in weighted_list"""
     sum_weight = sum(weighted_list)
     rand = random() * sum_weight
     temp = 0
@@ -16,6 +17,7 @@ def choice_with_weight(choices_list: List, weighted_list: List[float]):
         if temp <= rand < temp + weight:
             return choices_list[i]
         temp += weight
+    return choices_list[-1]
 
 
 class TrackParameterBase(metaclass=ABCMeta):

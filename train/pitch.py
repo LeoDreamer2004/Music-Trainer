@@ -38,7 +38,6 @@ mutation_rate_3 = 1
 
 
 class PitchParameter(TrackParameterBase):
-    """Used to calculate parameters of the tracks"""
 
     def __init__(self, track: Track) -> None:
         super().__init__(track)
@@ -149,18 +148,16 @@ class GAForPitch(TrackGABase):
             track = deepcopy(
                 self.population[choice([self.best_index, self.second_index])]
             )
-            mutate_type = randint(
-                1, mutation_rate_1 + mutation_rate_2 + mutation_rate_3
-            )
-            # When mutating, do not change the last note pitch,
-            # because we want the last note to be the tonic
-            if mutate_type <= mutation_rate_1:
-                self._mutate_1(track)
-            elif mutate_type <= mutation_rate_1 + mutation_rate_2:
-                self._mutate_2(track)
-            else:
-                self._mutate_3(track)
-            self.population[i] = track
+            mutate_type = choice_with_weight([
+                self._mutate_1,
+                self._mutate_2,
+                self._mutate_3,
+            ], [
+                mutation_rate_1,
+                mutation_rate_2,
+                mutation_rate_3,
+            ])
+            mutate_type(track)
 
     @staticmethod
     def _mutate_1(track: Track):

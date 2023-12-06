@@ -1,13 +1,25 @@
 from abc import ABCMeta, abstractmethod
 import sys
+
+from random import random
 from typing import List
 from midoWrapper import *
 
 sys.path.append("..")
 
 
+def choice_with_weight(choices_list: List, weighted_list: List[float]):
+    sum_weight = sum(weighted_list)
+    rand = random() * sum_weight
+    temp = 0
+    for i, weight in enumerate(weighted_list):
+        if temp <= rand < temp + weight:
+            return choices_list[i]
+        temp += weight
+
+
 class TrackParameterBase(metaclass=ABCMeta):
-    """Used to calculate parameters of the tracks"""
+    """Base class for calculating parameters of the tracks"""
 
     def __init__(self, track: Track):
         self.track = track
@@ -20,6 +32,8 @@ class TrackParameterBase(metaclass=ABCMeta):
 
 
 class TrackGABase(metaclass=ABCMeta):
+    """Base class for GA"""
+
     def __init__(self, population: List[Track], mutation_rate: float):
         self.population = population
         self.bar_number = population[0].bar_number

@@ -38,7 +38,6 @@ mutation_rate_3 = 1
 
 
 class PitchParameter(TrackParameterBase):
-
     def __init__(self, track: Track) -> None:
         super().__init__(track)
         self.means = np.zeros(self.bar_number, dtype=float)
@@ -88,11 +87,7 @@ class PitchParameter(TrackParameterBase):
             for idx in range(len(bar) - 2):
                 diff1 = bar[idx + 1].pitch - bar[idx].pitch
                 diff2 = bar[idx + 2].pitch - bar[idx + 1].pitch
-                if (
-                    abs(diff1 - diff2) <= 2
-                    and diff1 * diff2 > 0
-                    and (diff1 != 0 or diff2 != 0)
-                ):
+                if abs(diff1 - diff2) <= 2 and diff1 * diff2 > 0:
                     score_in_bar += 1
             self.three_note_score += len(bar) / ((score_in_bar + 1) * 3)
 
@@ -148,16 +143,20 @@ class GAForPitch(TrackGABase):
             track = deepcopy(
                 self.population[choice([self.best_index, self.second_index])]
             )
-            mutate_type = choice_with_weight([
-                self._mutate_1,
-                self._mutate_2,
-                self._mutate_3,
-            ], [
-                mutation_rate_1,
-                mutation_rate_2,
-                mutation_rate_3,
-            ])
+            mutate_type = choice_with_weight(
+                [
+                    self._mutate_1,
+                    self._mutate_2,
+                    self._mutate_3,
+                ],
+                [
+                    mutation_rate_1,
+                    mutation_rate_2,
+                    mutation_rate_3,
+                ],
+            )
             mutate_type(track)
+            self.population[i] = track
 
     @staticmethod
     def _mutate_1(track: Track):

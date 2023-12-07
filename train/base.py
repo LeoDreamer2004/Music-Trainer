@@ -51,9 +51,13 @@ class TrackGABase(metaclass=ABCMeta):
     def get_fitness(self, track: Track) -> float:
         raise NotImplementedError
 
-    @abstractmethod
     def select(self):
-        raise NotImplementedError
+        for i in range(len(self.fitness)):
+            if self.fitness[i] > self.fitness[self.best_index]:
+                self.best_index = i
+                self.second_index = self.best_index
+            elif self.fitness[i] > self.fitness[self.second_index]:
+                self.second_index = i
 
     @abstractmethod
     def crossover(self):
@@ -67,10 +71,10 @@ class TrackGABase(metaclass=ABCMeta):
         print("Now the best fitness is", self.fitness[self.best_index])
 
     def epoch(self):
-        self.update_fitness()
-        self.select()
         self.crossover()
         self.mutate()
+        self.update_fitness()
+        self.select()
 
     @abstractmethod
     def run(self, generation):

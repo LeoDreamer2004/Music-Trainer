@@ -8,7 +8,7 @@ reference_file = "midi/reference.mid"
 output_file = "midi/result.mid"
 bar_number = 8
 key_mode = "Db"
-with_accompaniment = False
+with_accompaniment = True
 
 mutation_rate = 0.8
 iteration_num = 1000

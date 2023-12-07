@@ -2,18 +2,20 @@ from random import choice, randint, random
 from .base import *
 from copy import deepcopy
 
+
+DEBUG = False
 # the weight for strong beats
-theta = 0.5
+theta = 1
 # the weight for echo
 delta = 1
-# pass
-epsilon = 0.3
+# the punishment for strong notes on weak beats
+epsilon = 0.6
 # the punishment for long notes
-omiga = 0.1
+omiga = 0.2
 # the punishment for neighboring notes with large length gap
-omicron = 0.1
+omicron = 0.2
 # the target value
-rhythm_target = 3.5
+rhythm_target = 3
 
 # rate of four types of mutation
 mutation_rate_1 = 1  # Swap two notes' length
@@ -95,30 +97,22 @@ class GAForRhythm(TrackGABase):
         super().__init__(population, mutation_rate)
         self.update_fitness()
 
-    def get_fitness(self, track: Track) -> float:
-        # It's better to have a higher fitness
-        fitness = 0
-        # give punishment if the number of strong beats is not enough
+    @staticmethod
+    def get_fitness(track: Track) -> float:
         param = RyhthmParameter(track)
-        fitness += (param.strong_beats - 2 * self.bar_number) * theta
+        f1 = (param.strong_beats - 2 * param.bar_number) * theta
         # give encouragement if echo is high
-        fitness += param.echo * delta
+        f2 = param.echo * delta
         # give punishment if there are strong notes on weak beats
-        fitness -= param.strong_notes_on_weak_beats * epsilon
+        f3 = -param.strong_notes_on_weak_beats * epsilon
         # give punishment if there are too many long notes
-        fitness -= param.long_notes * omiga
+        f4 = -param.long_notes * omiga
         # give punishment if there are too many neighboring notes
         # with large length gap
-        fitness -= param.neighboring_notes * omicron
-        return fitness
-
-    def select(self):
-        for i in range(len(self.fitness)):
-            if self.fitness[i] > self.fitness[self.best_index]:
-                self.best_index = i
-                self.second_index = self.best_index
-            elif self.fitness[i] > self.fitness[self.second_index]:
-                self.second_index = i
+        f5 = -param.neighboring_notes * omicron
+        if DEBUG and random() < 0.01:
+            print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5}")
+        return f1 + f2 + f3 + f4 + f5
 
     def crossover(self):
         for i in range(len(self.population)):

@@ -76,7 +76,7 @@ class RhythmParameter(TrackParameterBase):
                     self.long_notes += 0.1
 
     def _update_neighboring_notes(self):
-        # We don't want a quarter note followed by a eighth note, vice versa
+        # We don't want a quarter note followed by an eighth note, vice versa
         self.neighboring_notes = 0
         notes = self.track.note
         for idx in range(len(notes) - 1):

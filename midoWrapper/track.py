@@ -93,7 +93,7 @@ class Track:
         # We want the pitch of the last note is the tonic
         while True:
             pitch = Note.random_pitch_in_mode(self.key)
-            if Note.ord_in_mode(self.key, pitch) == 1:
+            if Note.ord_in_mode(pitch, self.key) == 1:
                 track.note[-1].pitch = pitch
                 return track
 

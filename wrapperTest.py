@@ -26,7 +26,7 @@ def read_midi_test():
     left_hand = Track.from_track(s.tracks[1])
     left_hand.print_brief_info()
     # For more information, use print(track) to see the detailed notes.
-    print(left_hand.bar_number)
+    # print(left_hand)
 
     # Expected output:
     # Key: D

@@ -72,15 +72,17 @@ class Note:
             return (pitch - base) % 12 in major_offset
 
     @staticmethod
-    def random_pitch_in_mode(key: Key_T):
+    def random_pitch_in_mode(
+        key: Key_T, min_pitch: int = NOTE_MIN, max_pitch: int = NOTE_MAX
+    ):
         """Generate a random note in the given mode."""
         while True:
-            pitch = randint(NOTE_MIN, NOTE_MAX)
+            pitch = randint(max(min_pitch, NOTE_MIN), min(max_pitch, NOTE_MAX))
             if Note.in_mode(pitch, key):
                 return pitch
 
     @staticmethod
-    def ord_in_mode(key: Key_T, pitch: Pitch_T):
+    def ord_in_mode(pitch: Pitch_T, key: Key_T):
         """Get the order of the note in the given mode.
         For example, in C major, C is 1, D is 2, E is 3, etc."""
         if key.endswith("m"):

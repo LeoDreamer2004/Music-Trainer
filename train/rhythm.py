@@ -5,21 +5,21 @@ from copy import deepcopy
 
 DEBUG = False
 # the weight for strong beats
-theta = 1
+r1 = 1
 # the weight for echo
-delta = 1
+r2 = 1
 # the punishment for strong notes on weak beats
-epsilon = 0.6
+r3 = 0.6
 # the punishment for long notes
-omiga = 0.2
+r4 = 0.2
 # the punishment for neighboring notes with large length gap
-omicron = 0.2
+r5 = 0.2
 # the target value
 rhythm_target = 3
 
 # rate of four types of mutation
 mutation_rate_1 = 1  # Swap two notes' length
-mutation_rate_2 = 5  # Split a note into two notes
+mutation_rate_2 = 4  # Split a note into two notes
 mutation_rate_3 = 1  # Merge two notes into one note
 mutation_rate_4 = 2  # Copy a bar and paste it to another bar
 
@@ -100,16 +100,16 @@ class GAForRhythm(TrackGABase):
     @staticmethod
     def get_fitness(track: Track) -> float:
         param = RyhthmParameter(track)
-        f1 = (param.strong_beats - 2 * param.bar_number) * theta
+        f1 = (param.strong_beats - 2 * param.bar_number) * r1
         # give encouragement if echo is high
-        f2 = param.echo * delta
+        f2 = param.echo * r2
         # give punishment if there are strong notes on weak beats
-        f3 = -param.strong_notes_on_weak_beats * epsilon
+        f3 = -param.strong_notes_on_weak_beats * r3
         # give punishment if there are too many long notes
-        f4 = -param.long_notes * omiga
+        f4 = -param.long_notes * r4
         # give punishment if there are too many neighboring notes
         # with large length gap
-        f5 = -param.neighboring_notes * omicron
+        f5 = -param.neighboring_notes * r5
         if DEBUG and random() < 0.01:
             print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5}")
         return f1 + f2 + f3 + f4 + f5
@@ -137,8 +137,18 @@ class GAForRhythm(TrackGABase):
             # Meanwhile, do not change the first note pitch in every bar,
             # in case of empty bars.
             mutate_type = choice_with_weight(
-                [self._mutate_1, self._mutate_2, self._mutate_3, self._mutate_4],
-                [mutation_rate_1, mutation_rate_2, mutation_rate_3, mutation_rate_4],
+                [
+                    self._mutate_1,
+                    self._mutate_2,
+                    self._mutate_3,
+                    self._mutate_4,
+                ],
+                [
+                    mutation_rate_1,
+                    mutation_rate_2,
+                    mutation_rate_3,
+                    mutation_rate_4,
+                ],
             )
             mutate_type(track)
             self.population[i] = track

@@ -61,7 +61,7 @@ class Note:
 
     @staticmethod
     def in_mode(pitch: Pitch_T, key: Key_T):
-        """judge if the note is in the given mode."""
+        """Judge if the note is in the given mode."""
         if key.endswith("m"):
             # minor mode
             base = note_name_dict[key[:-1]]
@@ -75,7 +75,8 @@ class Note:
     def random_pitch_in_mode(
         key: Key_T, min_pitch: int = NOTE_MIN, max_pitch: int = NOTE_MAX
     ):
-        """Generate a random note in the given mode."""
+        """Generate a random note in the given mode
+        with the pitch in the range [min_pitch, max_pitch]."""
         while True:
             pitch = randint(max(min_pitch, NOTE_MIN), min(max_pitch, NOTE_MAX))
             if Note.in_mode(pitch, key):
@@ -84,7 +85,8 @@ class Note:
     @staticmethod
     def ord_in_mode(pitch: Pitch_T, key: Key_T):
         """Get the order of the note in the given mode.
-        For example, in C major, C is 1, D is 2, E is 3, etc."""
+        For example, in C major, C is 1, D is 2, E is 3, etc.
+        Raise error if the note is not in the mode."""
         if key.endswith("m"):
             # minor mode
             base = note_name_dict[key[:-1]]
@@ -97,7 +99,10 @@ class Note:
     @staticmethod
     def name_to_pitch(note_name: str) -> Pitch_T:
         """Convert a note name to a pitch.
-        For example, "C4" -> 60."""
+        For example, "C4" -> 60.
+
+        If you want to convert a key to a pitch,
+        use `key_to_pitch()` instead."""
         octave = note_name[-1]
         name = note_name[:-1]
         pitch = note_name_dict[name]
@@ -112,3 +117,12 @@ class Note:
         for name, picth in note_name_dict.items():
             if note == picth:
                 return name + str(octave)
+
+    @staticmethod
+    def key_to_pitch(key: Key_T) -> Pitch_T:
+        """Convert a key to a pitch.
+        For example, "C"/"Cm" -> 0, "Eb"/"Ebm" -> 3, and "B#" -> 11."""
+        if key.endswith("m"):
+            return note_name_dict[key[:-1]]
+        else:
+            return note_name_dict[key]

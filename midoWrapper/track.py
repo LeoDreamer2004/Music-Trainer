@@ -72,7 +72,7 @@ class Track:
         event_set = set()  # (time, 0/1(note_off/on), note)
         for note in self.note:
             event_set.add((note.start_time, 1, note))
-            event_set.add((note.start_time + note.length, 0, note))
+            event_set.add((note.end_time, 0, note))
         # Sort all the events by time. If the time is same, note_off is before note_on.
         sorted_time = sorted(event_set, key=lambda x: (x[0], x[1]))
 
@@ -130,14 +130,14 @@ class Track:
         for note in self.note:
             idx = note.start_time // BAR_LENGTH
 
-            if note.start_time + note.length <= (idx + 1) * BAR_LENGTH:
+            if note.end_time <= (idx + 1) * BAR_LENGTH:
                 bars[idx].append(note)
             else:
                 # The note exceeds the bar, split it into two parts
                 note1, note2 = deepcopy(note), deepcopy(note)
                 bar_time = (idx + 1) * BAR_LENGTH
                 note1.length = bar_time - note.start_time
-                note2.length = note.start_time + note.length - bar_time
+                note2.length = note.end_time - bar_time
                 note2.start_time = bar_time
                 bars[idx].append(note1)
                 bars[idx + 1].append(note2)
@@ -151,7 +151,7 @@ class Track:
     @property
     def full_length(self):
         """The length of the track"""
-        return max(note.start_time + note.length for note in self.note)
+        return max(note.end_time for note in self.note)
 
     @property
     def bar_number(self):

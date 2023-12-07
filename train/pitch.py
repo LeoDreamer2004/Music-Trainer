@@ -88,7 +88,7 @@ class PitchParameter(TrackParameterBase):
                 if abs(diff1) <= 5 and abs(diff2) <= 5 and diff1 * diff2 >= 0:
                     score_in_bar += 1
                 elif diff1 * diff2 < -20:
-                    score_in_bar -= 1
+                    score_in_bar -= 3
             if len(bar) > 2:
                 self.three_notes += score_in_bar / (len(bar) - 2)
 

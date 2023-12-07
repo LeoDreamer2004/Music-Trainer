@@ -7,20 +7,20 @@ DEBUG = False
 # the weight for strong beats
 r1 = 1
 # the weight for echo
-r2 = 0.6
+r2 = 0.5
 # the punishment for strong notes on weak beats
-r3 = 0.6
+r3 = 0.2
 # the punishment for long notes
 r4 = 0.2
 # the punishment for neighboring notes with large length gap
-r5 = 0.2
+r5 = 0.1
 # the target value
-rhythm_target = 1.7
+rhythm_target = 1.2
 
 # rate of four types of mutation
-mutation_rate_1 = 2  # Swap two notes' length
+mutation_rate_1 = 4  # Swap two notes' length
 mutation_rate_2 = 4  # Split a note into two notes
-mutation_rate_3 = 2  # Merge two notes into one note
+mutation_rate_3 = 4  # Merge two notes into one note
 mutation_rate_4 = 1  # Copy a bar and paste it to another bar
 
 
@@ -66,15 +66,17 @@ class RyhthmParameter(TrackParameterBase):
             )
 
     def _update_long_notes(self):
+        # Too many long notes are not welcomed
         self.long_notes = 0
         for bar in self.bars:
             for note in bar:
                 if note.length == HALF:
-                    self.long_notes += 1
+                    self.long_notes += 0.8
                 elif note.length >= QUARTER:
-                    self.long_notes += 0.15
+                    self.long_notes += 0.1
 
     def _update_neighboring_notes(self):
+        # We don't want a quarter note followed by a eighth note, vice versa
         self.neighboring_notes = 0
         notes = self.track.note
         for idx in range(len(notes) - 1):

@@ -3,7 +3,7 @@ from random import choice, randint, random
 import numpy as np
 from .base import *
 
-DEBUG = True
+DEBUG = False
 # the weight for mean, standard deviation of intervals
 p1, p2 = 2, 2
 # the weight for bad notes (outside the mode)

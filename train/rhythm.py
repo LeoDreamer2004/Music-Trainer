@@ -7,7 +7,7 @@ DEBUG = False
 # the weight for strong beats
 r1 = 1
 # the weight for echo
-r2 = 1
+r2 = 0.6
 # the punishment for strong notes on weak beats
 r3 = 0.6
 # the punishment for long notes
@@ -15,13 +15,13 @@ r4 = 0.2
 # the punishment for neighboring notes with large length gap
 r5 = 0.2
 # the target value
-rhythm_target = 3
+rhythm_target = 1.7
 
 # rate of four types of mutation
-mutation_rate_1 = 1  # Swap two notes' length
+mutation_rate_1 = 2  # Swap two notes' length
 mutation_rate_2 = 4  # Split a note into two notes
-mutation_rate_3 = 1  # Merge two notes into one note
-mutation_rate_4 = 2  # Copy a bar and paste it to another bar
+mutation_rate_3 = 2  # Merge two notes into one note
+mutation_rate_4 = 1  # Copy a bar and paste it to another bar
 
 
 class RyhthmParameter(TrackParameterBase):
@@ -205,7 +205,7 @@ class GAForRhythm(TrackGABase):
     def run(self, generation):
         print("Start training for rhythm...")
         for i in range(generation):
-            if i % 10 == 0:
+            if i % 30 == 0:
                 print(f"Rhythm generation {i}:", end=" ")
                 self.show_info()
             self.epoch()

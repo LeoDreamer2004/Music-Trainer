@@ -8,11 +8,11 @@ reference_file = "midi/reference.mid"
 output_file = "midi/result.mid"
 bar_number = 8
 key_mode = "Db"
-with_accompaniment = True
+with_accompaniment = False
 
 mutation_rate = 0.8
 iteration_num = 1000
-population_size = 10
+population_size = 20
 
 
 def main():

@@ -14,6 +14,7 @@ r3 = 0.6
 r4 = 0.2
 # the punishment for neighboring notes with large length gap
 r5 = 0.2
+
 # the target value
 rhythm_target = 1.7
 
@@ -24,7 +25,7 @@ mutation_rate_3 = 2  # Merge two notes into one note
 mutation_rate_4 = 1  # Copy a bar and paste it to another bar
 
 
-class RyhthmParameter(TrackParameterBase):
+class RhythmParameter(TrackParameterBase):
     def __init__(self, track: Track) -> None:
         super().__init__(track)
         self.strong_beats = 0
@@ -33,13 +34,13 @@ class RyhthmParameter(TrackParameterBase):
         self.neighboring_notes = 0.0
         self.strong_notes_on_weak_beats = 0.0
         self.update_parameters()
-
+    
     def update_parameters(self):
         self._update_beats()
         self._update_echo()
         self._update_long_notes()
         self._update_neighboring_notes()
-
+    
     def _update_beats(self):
         self.strong_beats = 0
         self.strong_notes_on_weak_beats = 0
@@ -53,7 +54,7 @@ class RyhthmParameter(TrackParameterBase):
                 elif note.start_time % note.length != 0:
                     bad_beats += 1
             self.strong_notes_on_weak_beats += bad_beats / len(bar)
-
+    
     def _update_echo(self):
         # Bar 0 and 2; 1 and 3; 4 and 6; 5 and 7 are echo, etc.
         # If they have the similar rhythm, the echo will be higher
@@ -64,7 +65,7 @@ class RyhthmParameter(TrackParameterBase):
             self.echo += self._rhythm_similarity_of_bars(
                 self.bars[bar + 1], self.bars[bar + 3]
             )
-
+    
     def _update_long_notes(self):
         self.long_notes = 0
         for bar in self.bars:
@@ -73,14 +74,14 @@ class RyhthmParameter(TrackParameterBase):
                     self.long_notes += 1
                 elif note.length >= QUARTER:
                     self.long_notes += 0.15
-
+    
     def _update_neighboring_notes(self):
         self.neighboring_notes = 0
         notes = self.track.note
         for idx in range(len(notes) - 1):
             if abs(notes[idx].length - notes[idx + 1].length) == HALF - EIGHTH:
                 self.neighboring_notes += 1
-
+    
     @staticmethod
     def _rhythm_similarity_of_bars(bar1: List[Note], bar2: List[Note]):
         """Calculate the similarity of the rhythm of two bars."""
@@ -89,17 +90,16 @@ class RyhthmParameter(TrackParameterBase):
             for note2 in bar2:
                 if (note1.start_time - note2.start_time) % BAR_LENGTH == 0:
                     same += 1
-        return (same**2) / (len(bar1) * len(bar2))
+        return (same ** 2) / (len(bar1) * len(bar2))
 
 
 class GAForRhythm(TrackGABase):
     def __init__(self, population: List[Track], mutation_rate: float):
         super().__init__(population, mutation_rate)
         self.update_fitness()
-
-    @staticmethod
-    def get_fitness(track: Track) -> float:
-        param = RyhthmParameter(track)
+    
+    def get_fitness(self, track: Track) -> float:
+        param = RhythmParameter(track)
         f1 = (param.strong_beats - 2 * param.bar_number) * r1
         # give encouragement if echo is high
         f2 = param.echo * r2
@@ -113,7 +113,7 @@ class GAForRhythm(TrackGABase):
         if DEBUG and random() < 0.01:
             print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5}")
         return f1 + f2 + f3 + f4 + f5
-
+    
     def crossover(self):
         for i in range(len(self.population)):
             index1 = self.best_index if randint(0, 1) else self.second_index
@@ -123,7 +123,7 @@ class GAForRhythm(TrackGABase):
             cross_point = randint(0, self.bar_number // 2 - 1) * 2
             bars = bars1[:cross_point] + bars2[cross_point:]
             self.population[i] = self.population[i].join_bars(bars)
-
+    
     def mutate(self):
         for i in range(len(self.population)):
             if random() > self.mutation_rate:
@@ -152,7 +152,7 @@ class GAForRhythm(TrackGABase):
             )
             mutate_type(track)
             self.population[i] = track
-
+    
     @staticmethod
     def _mutate_1(track: Track):
         # Swap two notes' length
@@ -164,7 +164,7 @@ class GAForRhythm(TrackGABase):
         end = note2.end_time
         note1.length, note2.length = note2.length, note1.length
         note2.start_time = end - note2.length
-
+    
     @staticmethod
     def _mutate_2(track: Track):
         # Split a note into two notes
@@ -180,7 +180,7 @@ class GAForRhythm(TrackGABase):
                 new_note = Note(note.pitch, length, end - length, note.velocity)
                 track.note.insert(idx + 1, new_note)
                 return
-
+    
     @staticmethod
     def _mutate_3(track: Track):
         # merge two notes into one note
@@ -191,7 +191,7 @@ class GAForRhythm(TrackGABase):
             return
         note.length = track.note[idx + 1].end_time - note.start_time
         track.note.pop(idx + 1)
-
+    
     @staticmethod
     def _mutate_4(track: Track):
         # copy a bar and paste it to another bar
@@ -201,7 +201,7 @@ class GAForRhythm(TrackGABase):
         for note in bars[idx - 2]:
             note.start_time -= BAR_LENGTH * 2
         track.join_bars(bars)
-
+    
     def run(self, generation):
         print("Start training for rhythm...")
         for i in range(generation):
@@ -209,12 +209,12 @@ class GAForRhythm(TrackGABase):
                 print(f"Rhythm generation {i}:", end=" ")
                 self.show_info()
             self.epoch()
-
+            
             if self.fitness[self.best_index] > rhythm_target:
                 print(f"[!] Target reached at generation {i}")
                 print(f"final fitness for rhythm: {self.fitness[self.best_index]}")
                 return self.population[self.best_index]
-
+        
         print(f"[!] Target not reached after {generation} generations")
         print(f"final fitness for rhythm: {self.fitness[self.best_index]}")
         return self.population[self.best_index]

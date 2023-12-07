@@ -3,6 +3,7 @@ from random import choice, randint, random
 import numpy as np
 from .base import *
 
+DEBUG = False
 interval_value_dict = {
     0: 1,
     1: 2,
@@ -22,13 +23,15 @@ interval_value_dict = {
 
 large_interval_value = 5
 # the weight for mean, standard deviation of intervals
-alpha, beta, delta = 1, 4, 0.1
+alpha, beta = 8, .5
 # the weight for bad notes (outside the mode)
-gamma = 0.5
+gamma = 5
+# the weight for three notes
+delta = 0.1
 mean_coeff = np.array([2, 1, 1, 1, 1, 1, 1, 2])
 standard_coeff = np.array([1, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 1])
 # the target value
-pitch_target = 2.5
+pitch_target = 2
 # whether to use three_note_fitness
 three_note_fitness = True
 # rate of three types of mutation
@@ -43,7 +46,7 @@ class PitchParameter(TrackParameterBase):
         self.means = np.zeros(self.bar_number, dtype=float)
         self.standard = np.zeros(self.bar_number, dtype=float)
         self.bad_notes = 0
-        self.three_note_score = 0  # the score of three notes in a bar
+        self.three_notes = 0.0
         self.update_parameters()
 
     @staticmethod
@@ -89,7 +92,7 @@ class PitchParameter(TrackParameterBase):
                 diff2 = bar[idx + 2].pitch - bar[idx + 1].pitch
                 if abs(diff1 - diff2) <= 2 and diff1 * diff2 > 0:
                     score_in_bar += 1
-            self.three_note_score += len(bar) / ((score_in_bar + 1) * 3)
+            self.three_notes += score_in_bar / (len(bar) - 2)
 
     def _update_bad_notes(self):
         self.bad_notes = 0
@@ -108,28 +111,21 @@ class GAForPitch(TrackGABase):
         self.update_fitness()
 
     def get_fitness(self, track: Track) -> float:
-        # It's better to have a lower fitness
-        track_param = PitchParameter(track)
-        mean_diff = np.abs(track_param.means - self.ref_param.means)
-        f1 = alpha * np.dot(mean_coeff, mean_diff)
-        standard_diff = np.abs(track_param.standard - self.ref_param.standard)
-        f2 = beta * np.dot(standard_coeff, standard_diff)
-        g = gamma * track_param.bad_notes
+        param = PitchParameter(track)
+        mean_diff = np.abs(param.means - self.ref_param.means)
+        f1 = alpha * (1 / np.dot(mean_coeff, mean_diff))
+        standard_diff = np.abs(param.standard - self.ref_param.standard)
+        f2 = beta * (1 / np.dot(standard_coeff, standard_diff))
 
         if three_note_fitness:
-            f3 = track_param.three_note_score * delta
+            f3 = param.three_notes * delta
         else:
             f3 = 0
 
-        return f1 + f2 + g + f3
+        if DEBUG and random() < 0.01:
+            print(f"{f1} \t {f2} \t {f3}")
 
-    def select(self):
-        for i in range(len(self.fitness)):
-            if self.fitness[i] < self.fitness[self.best_index]:
-                self.best_index = i
-                self.second_index = self.best_index
-            elif self.fitness[i] < self.fitness[self.second_index]:
-                self.second_index = i
+        return f1 + f2 + f3
 
     def crossover(self):
         # No crossover for pitch
@@ -181,17 +177,17 @@ class GAForPitch(TrackGABase):
 
     def run(self, generation: int):
         best_track = deepcopy(self.population[self.best_index])
-        best_fitness = float("inf")
+        best_fitness = 0
         for i in range(generation):
             if i % 30 == 0:
                 print(f"Pitch generation {i}:", end=" ")
                 self.show_info()
             self.epoch()
-            if self.fitness[self.best_index] < pitch_target:
+            if self.fitness[self.best_index] > pitch_target:
                 print(f"[!] Target reached at generation {i}")
                 print(f"final fitness for pitch: {self.fitness[self.best_index]}")
                 return self.population[self.best_index]
-            elif self.fitness[self.best_index] < best_fitness:
+            elif self.fitness[self.best_index] > best_fitness:
                 best_fitness = self.fitness[self.best_index]
                 best_track = deepcopy(self.population[self.best_index])
 

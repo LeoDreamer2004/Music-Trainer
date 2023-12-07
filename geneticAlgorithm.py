@@ -1,5 +1,4 @@
 from time import time
-import mido
 from midoWrapper import *
 from train.pitch import GAForPitch
 from train.rhythm import GAForRhythm
@@ -17,17 +16,16 @@ population_size = 20
 
 def main():
     t_start = time()
-    
-    ref_midi = mido.MidiFile(reference_file)
-    ref_track = Track.from_track(ref_midi.tracks[0])
-    
+
+    ref_track, left_hand = parse_midi(reference_file)
+
     population = [
         Track(0, key_mode).generate_random_track(bar_number)
         for _ in range(population_size)
     ]
     ga_rhythm = GAForRhythm(population, mutation_rate)
     rhythm_track = ga_rhythm.run(iteration_num)
-    
+
     # Use the rhythm of the track forever
     population_with_rhythm = [
         Track(0, key_mode).generate_random_pitch_on_rhythm(rhythm_track)
@@ -35,16 +33,15 @@ def main():
     ]
     ga_pitch = GAForPitch(ref_track, population_with_rhythm, mutation_rate)
     result = ga_pitch.run(iteration_num)
-    
-    s = get_midi(key_mode)
+
+    s = generate_midi(key_mode)
     s.tracks.append(result.to_track())
     # accompaniment (stolen from reference)
     if with_accompaniment:
-        left_hand = Track.from_track(ref_midi.tracks[1])
         for note in left_hand.note:
             note.velocity = VELOCITY
         s.tracks.append(left_hand.to_track())
-    
+
     save_midi(s, output_file)
     print(f"Time cost: {time() - t_start}s")
 

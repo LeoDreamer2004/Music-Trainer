@@ -1,10 +1,9 @@
 from midoWrapper import *
-import mido
 from copy import deepcopy
 
 
 def generate_random_midi_test():
-    s = get_midi()
+    s = generate_midi()
     track = Track(0, "G#m")
     track.generate_random_track(4)  # 4 bars
     s.tracks.append(track.to_track())
@@ -19,11 +18,10 @@ def generate_random_midi_test():
 
 
 def read_midi_test():
-    s = mido.MidiFile("midi/test.mid")
-    right_hand = Track.from_track(s.tracks[0])
+    tracks = parse_midi("midi/random.mid")
+    right_hand, left_hand = tracks
     right_hand.print_brief_info()
     print("----------------")
-    left_hand = Track.from_track(s.tracks[1])
     left_hand.print_brief_info()
     # For more information, use print(track) to see the detailed notes.
     # print(left_hand)

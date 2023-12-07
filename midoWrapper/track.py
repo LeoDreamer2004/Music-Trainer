@@ -8,6 +8,9 @@ from .note import *
 from .musicSettings import *
 
 
+Bar = List[Note]
+
+
 class Track:
     """A wrapper for mido.MidiTrack."""
 
@@ -121,7 +124,7 @@ class Track:
         self.generate_random_pitch_on_rhythm(self)
         return self
 
-    def split_into_bars(self) -> List[List[Note]]:
+    def split_into_bars(self) -> List[Bar]:
         """Split the track into bars."""
         bars = [[] for _ in range(self.bar_number)]
         for note in self.note:
@@ -140,7 +143,7 @@ class Track:
                 bars[idx + 1].append(note2)
         return bars
 
-    def join_bars(self, bars: List[List[Note]]):
+    def join_bars(self, bars: List[Bar]):
         """Join the bars into a track."""
         self.note = [note for bar in bars for note in bar]
         return self

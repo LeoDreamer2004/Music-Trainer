@@ -19,7 +19,7 @@ rhythm_target = 1.2
 
 # rate of four types of mutation
 mutation_rate_1 = 4  # Swap two notes' length
-mutation_rate_2 = 4  # Split a note into two notes
+mutation_rate_2 = 5  # Split a note into two notes
 mutation_rate_3 = 4  # Merge two notes into one note
 mutation_rate_4 = 1  # Copy a bar and paste it to another bar
 
@@ -84,7 +84,7 @@ class RhythmParameter(TrackParameterBase):
                 self.neighboring_notes += 1
 
     @staticmethod
-    def _rhythm_similarity_of_bars(bar1: List[Note], bar2: List[Note]):
+    def _rhythm_similarity_of_bars(bar1: Bar, bar2: Bar):
         """Calculate the similarity of the rhythm of two bars."""
         same = 0
         for note1 in bar1:

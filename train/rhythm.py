@@ -24,7 +24,7 @@ mutation_rate_3 = 4  # Merge two notes into one note
 mutation_rate_4 = 1  # Copy a bar and paste it to another bar
 
 
-class RyhthmParameter(TrackParameterBase):
+class RhythmParameter(TrackParameterBase):
     def __init__(self, track: Track) -> None:
         super().__init__(track)
         self.strong_beats = 0
@@ -76,7 +76,7 @@ class RyhthmParameter(TrackParameterBase):
                     self.long_notes += 0.1
 
     def _update_neighboring_notes(self):
-        # We don't want a quarter note followed by a eighth note, vice versa
+        # We don't want a quarter note followed by an eighth note, vice versa
         self.neighboring_notes = 0
         notes = self.track.note
         for idx in range(len(notes) - 1):
@@ -101,7 +101,7 @@ class GAForRhythm(TrackGABase):
 
     @staticmethod
     def get_fitness(track: Track) -> float:
-        param = RyhthmParameter(track)
+        param = RhythmParameter(track)
         f1 = (param.strong_beats - 2 * param.bar_number) * r1
         # give encouragement if echo is high
         f2 = param.echo * r2

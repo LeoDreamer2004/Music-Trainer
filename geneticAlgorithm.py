@@ -10,8 +10,8 @@ bar_number = 8
 key_mode = "Db"
 with_accompaniment = False
 
-mutation_rate = 0.2
-iteration_num = 5000
+mutation_rate = 0.8
+iteration_num = 1000
 population_size = 10
 
 

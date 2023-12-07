@@ -50,14 +50,14 @@ class PitchParameter(TrackParameterBase):
         self.three_notes = 0.0
         self.echo = 0
         self.update_parameters()
-    
+
     def update_parameters(self):
         self._update_interval_parameters()
         self._update_bad_notes()
         self._update_three_note_parameters()
         self._update_emotions()
         self._update_echo()
-    
+
     def _update_interval_parameters(self):
         for idx, bar in enumerate(self.bars):
             values = []
@@ -69,15 +69,15 @@ class PitchParameter(TrackParameterBase):
                 # and the first note of the current bar
                 interval = bar[0].pitch - self.bars[idx - 1][-1].pitch
                 values.append(abs(interval) / 3)
-            
+
             if not values:
                 self.means[idx] = 0
                 self.standard[idx] = 0
                 continue
-            
+
             self.means[idx] = np.mean(values)
             self.standard[idx] = np.std(values)
-    
+
     def _update_three_note_parameters(self):
         """Calculate the score of three notes in a bar.
         If the pitches of three notes is similar to an arithmetic sequence, it has higher score.
@@ -93,13 +93,13 @@ class PitchParameter(TrackParameterBase):
                     score_in_bar -= 3
             if len(bar) > 2:
                 self.three_notes += score_in_bar / (len(bar) - 2)
-    
+
     def _update_bad_notes(self):
         self.bad_notes = 0
         for note in self.track.note:
             if not Note.in_mode(note.pitch, self.track.key):
                 self.bad_notes += 1
-    
+
     def _update_emotions(self):
         self.emotion = np.zeros(self.bar_number * 2, dtype=float)
         for note in self.track.note:
@@ -109,9 +109,9 @@ class PitchParameter(TrackParameterBase):
         for i in range(self.bar_number * 2):
             if self.emotion[i] == 0:
                 self.emotion[i] = 3  # default emotion
-    
+
     @staticmethod
-    def _pitch_similarity_of_bars(bar1: List[Note], bar2: List[Note]):
+    def _pitch_similarity_of_bars(bar1: Bar, bar2: Bar):
         """Calculate the similarity of the pitch of two bars."""
         diff1: List = []
         diff2: List = []
@@ -127,7 +127,7 @@ class PitchParameter(TrackParameterBase):
         for i in range(len(diff1)):
             diff.append(abs(diff1[i] - diff2[i]))
         return np.sum(diff) / len(diff)
-    
+
     def _update_echo(self):
         # Bar 0 and 2; 1 and 3; 4 and 6; 5 and 7 are echo, etc.
         # If they have the similar pitch difference, the echo will be higher
@@ -142,12 +142,12 @@ class PitchParameter(TrackParameterBase):
 
 class GAForPitch(TrackGABase):
     def __init__(
-            self, reference_track: Track, population: List[Track], mutation_rate: float
+        self, reference_track: Track, population: List[Track], mutation_rate: float
     ):
         super().__init__(population, mutation_rate)
         self.ref_param = PitchParameter(reference_track)
         self.update_fitness()
-    
+
     def get_fitness(self, track: Track) -> float:
         param = PitchParameter(track)
         mean_diff = np.abs(param.means - self.ref_param.means)
@@ -158,16 +158,16 @@ class GAForPitch(TrackGABase):
         emotion_diff = np.abs(param.emotion - self.ref_param.emotion)
         f4 = p5 * np.exp(-(np.dot(emotion_coeff, emotion_diff) / (self.bar_number * 2)))
         f5 = p6 * self.bar_number / (param.echo + 1)
-        
+
         if DEBUG and random() < 0.01:
             print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5}")
-        
+
         return f1 + f2 + f3 + f4 + f5
-    
+
     def crossover(self):
         # No crossover for pitch
         pass
-    
+
     def mutate(self):
         for i in range(len(self.population)):
             if random() > self.mutation_rate:
@@ -187,7 +187,7 @@ class GAForPitch(TrackGABase):
             )
             mutate_type(track)
             self.population[i] = track
-    
+
     @staticmethod
     def _mutate_1(track: Track):
         # If the interval between two notes is too large, change it
@@ -196,19 +196,19 @@ class GAForPitch(TrackGABase):
                 track.note[idx].pitch += 12
             elif track.note[idx + 1].pitch - track.note[idx].pitch < -12:
                 track.note[idx].pitch -= 12
-    
+
     @staticmethod
     def _mutate_2(track: Track):
         # Change the pitch of a random note
         idx = randint(0, len(track.note) - 2)
         track.note[idx].pitch = Note.random_pitch_in_mode(track.key)
-    
+
     @staticmethod
     def _mutate_3(track: Track):
         # Swap two notes' pitch
         idx = randint(1, len(track.note) - 2)
         track.note[idx], track.note[idx - 1] = track.note[idx - 1], track.note[idx]
-    
+
     @staticmethod
     def _mutate_4(track: Track):
         # if a short note has a big interval with the next note, change it
@@ -219,7 +219,7 @@ class GAForPitch(TrackGABase):
                     note.pitch = Note.random_pitch_in_mode(
                         track.key, next_pitch - 7, next_pitch + 7
                     )
-    
+
     def run(self, generation: int):
         best_track = deepcopy(self.population[self.best_index])
         best_fitness = 0
@@ -235,7 +235,7 @@ class GAForPitch(TrackGABase):
             elif self.fitness[self.best_index] > best_fitness:
                 best_fitness = self.fitness[self.best_index]
                 best_track = deepcopy(self.population[self.best_index])
-        
+
         print(f"[!] Target not reached after {generation} generations")
         print(f"final fitness for pitch: {best_fitness}")
         return best_track

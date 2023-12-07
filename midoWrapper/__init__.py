@@ -12,5 +12,5 @@ A wrapper module for mido. Provide:
 from .musicSettings import *
 from .note import Note
 from .note import Key_Major_T, Key_Minor_T, Key_T, Pitch_T
-from .track import Track
-from .utils import get_midi, save_midi
+from .track import Track, Bar
+from .utils import generate_midi, save_midi, parse_midi

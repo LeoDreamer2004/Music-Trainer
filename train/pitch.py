@@ -3,17 +3,19 @@ from random import choice, randint, random
 import numpy as np
 from .base import *
 
-DEBUG = False
+DEBUG = True
 # the weight for mean, standard deviation of intervals
 p1, p2 = 2, 2
 # the weight for bad notes (outside the mode)
 p3 = 5
 # the weight for three notes
-p4 = 1
+p4 = 2
 # the weight for emotion
 p5 = 3
 # the weight for echo
 p6 = 1
+# the weight for melody line
+p7 = 3
 
 # coefficient for similarity
 mean_coeff = np.array([2, 1, 1, 1, 1, 1, 1, 2])
@@ -31,7 +33,7 @@ interval_emotion_dict = {
     7: 5,  # seventh: lead, strong tension
 }
 # the target value
-pitch_target = 8
+pitch_target = 10
 
 # rate of three types of mutation
 mutation_rate_1 = 2
@@ -46,6 +48,9 @@ class PitchParameter(TrackParameterBase):
         self.means = np.zeros(self.bar_number, dtype=float)
         self.standard = np.zeros(self.bar_number, dtype=float)
         self.emotion = np.zeros(self.bar_number * 2, dtype=float)
+        self.melody_line = np.zeros(
+            self.bar_number * BAR_LENGTH // NOTE_UNIT, dtype=float
+        )
         self.bad_notes = 0
         self.three_notes = 0.0
         self.echo = 0
@@ -57,6 +62,7 @@ class PitchParameter(TrackParameterBase):
         self._update_three_note_parameters()
         self._update_emotions()
         self._update_echo()
+        self._update_melody_line()
 
     def _update_interval_parameters(self):
         for idx, bar in enumerate(self.bars):
@@ -89,7 +95,7 @@ class PitchParameter(TrackParameterBase):
                 diff2 = bar[idx + 2].pitch - bar[idx + 1].pitch
                 if abs(diff1) <= 5 and abs(diff2) <= 5 and diff1 * diff2 >= 0:
                     score_in_bar += 1
-                elif diff1 * diff2 < -20:
+                elif diff1 * diff2 < -25:
                     score_in_bar -= 3
             if len(bar) > 2:
                 self.three_notes += score_in_bar / (len(bar) - 2)
@@ -113,20 +119,17 @@ class PitchParameter(TrackParameterBase):
     @staticmethod
     def _pitch_similarity_of_bars(bar1: Bar, bar2: Bar):
         """Calculate the similarity of the pitch of two bars."""
-        diff1: List = []
-        diff2: List = []
-        for idx in range(len(bar1)):
-            diff1 += [0] * ((bar1[idx].length - 1) // EIGHTH)
-            if idx != len(bar1) - 1:
-                diff1.append(bar1[idx + 1].pitch - bar1[idx].pitch)
-        for idx in range(len(bar2)):
-            diff2 += [0] * ((bar2[idx].length - 1) // EIGHTH)
-            if idx != len(bar2) - 1:
-                diff2.append(bar2[idx + 1].pitch - bar2[idx].pitch)
-        diff: List = []
-        for i in range(len(diff1)):
-            diff.append(abs(diff1[i] - diff2[i]))
-        return np.sum(diff) / len(diff)
+        diff1 = np.zeros(BAR_LENGTH // NOTE_UNIT, dtype=int)
+        diff2 = np.zeros(BAR_LENGTH // NOTE_UNIT, dtype=int)
+        bar1_start = bar1[0].start_time
+        bar2_start = bar2[0].start_time
+        for idx in range(len(bar1) - 1):
+            idx1 = (bar1[idx].start_time - bar1_start) // NOTE_UNIT
+            diff1[idx1] = bar1[idx].pitch - bar1[idx + 1].pitch
+        for idx in range(len(bar2) - 1):
+            idx2 = (bar2[idx].start_time - bar2_start) // NOTE_UNIT
+            diff2[idx2] = bar2[idx].pitch - bar2[idx + 1].pitch
+        return np.mean(np.abs(diff1 - diff2))
 
     def _update_echo(self):
         # Bar 0 and 2; 1 and 3; 4 and 6; 5 and 7 are echo, etc.
@@ -138,6 +141,17 @@ class PitchParameter(TrackParameterBase):
             self.echo += self._pitch_similarity_of_bars(
                 self.bars[bar + 1], self.bars[bar + 3]
             )
+
+    def _update_melody_line(self):
+        self.melody_line = np.zeros(
+            self.bar_number * BAR_LENGTH // NOTE_UNIT, dtype=float
+        )
+        for note in self.track.note:
+            note_size = note.length // NOTE_UNIT
+            start_idx = note.start_time // NOTE_UNIT
+            # fill the melody line with the pitch of the note
+            self.melody_line[start_idx : start_idx + note_size] = note.pitch
+        self.melody_line -= np.mean(self.melody_line)  # normalize
 
 
 class GAForPitch(TrackGABase):
@@ -158,11 +172,12 @@ class GAForPitch(TrackGABase):
         emotion_diff = np.abs(param.emotion - self.ref_param.emotion)
         f4 = p5 * np.exp(-(np.dot(emotion_coeff, emotion_diff) / (self.bar_number * 2)))
         f5 = p6 * self.bar_number / (param.echo + 1)
+        f6 = p7 * np.corrcoef(param.melody_line, self.ref_param.melody_line)[0, 1]
 
         if DEBUG and random() < 0.01:
-            print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5}")
+            print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5} \t {f6}")
 
-        return f1 + f2 + f3 + f4 + f5
+        return f1 + f2 + f3 + f4 + f5 + f6
 
     def crossover(self):
         # No crossover for pitch
@@ -213,12 +228,13 @@ class GAForPitch(TrackGABase):
     def _mutate_4(track: Track):
         # if a short note has a big interval with the next note, change it
         for idx, note in enumerate(track.note[:-1]):
-            if note.length == EIGHTH:
+            if note.length <= EIGHTH:
                 next_pitch = track.note[idx + 1].pitch
                 if abs(note.pitch - next_pitch) > 7:
                     note.pitch = Note.random_pitch_in_mode(
                         track.key, next_pitch - 7, next_pitch + 7
                     )
+                    return
 
     def run(self, generation: int):
         best_track = deepcopy(self.population[self.best_index])

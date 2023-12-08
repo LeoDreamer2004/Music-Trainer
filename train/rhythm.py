@@ -9,11 +9,11 @@ r1 = 1
 # the weight for echo
 r2 = 0.5
 # the punishment for strong notes on weak beats
-r3 = 0.2
+r3 = 0.3
 # the punishment for long notes
-r4 = 0.2
+r4 = 0.3
 # the punishment for neighboring notes with large length gap
-r5 = 0.1
+r5 = 0.0
 # the target value
 rhythm_target = 1.2
 
@@ -42,7 +42,7 @@ class RhythmParameter(TrackParameterBase):
 
     def _update_beats(self):
         self.strong_beats = 0
-        self.strong_notes_on_weak_beats = 0
+        self.strong_notes_on_weak_beats = 0.0
         for bar in self.bars:
             bad_beats = 0
             for note in bar:
@@ -71,7 +71,7 @@ class RhythmParameter(TrackParameterBase):
         for bar in self.bars:
             for note in bar:
                 if note.length == HALF:
-                    self.long_notes += 0.8
+                    self.long_notes += 0.5
                 elif note.length >= QUARTER:
                     self.long_notes += 0.1
 
@@ -172,7 +172,7 @@ class GAForRhythm(TrackGABase):
         # Split a note into two notes
         idx = randint(0, len(track.note) - 2)
         note = track.note[idx]
-        if note.length == EIGHTH:  # We can't split it
+        if note.length <= NOTE_UNIT:  # We can't split it
             return
         while True:
             length = choice(NOTE_LENGTH)

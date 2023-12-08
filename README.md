@@ -1,7 +1,8 @@
-# MathInMusic Assignment
-Midterm Assignment for Math In Music course in 2023 Autumn
+# MathInMusic2023
+Midterm Assignment for Math In Music course in 2023 Autumn.
 
-The target is to create music piece by machine with genetic algorithm.
+The target is to create short music piece by machine with genetic algorithm.
 We train the pitch and rhythm respectively.
+Meanwhile, we provide an easy API `midoWrapper` for `mido`. See the docstrings for more infomation.
 
-Still developing.
+Still developing Now.

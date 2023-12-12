@@ -5,7 +5,7 @@ from .base import *
 
 DEBUG = False
 # the weight for mean, standard deviation of intervals
-p1, p2 = 2, 2
+p1, p2 = 2, 0
 # the weight for bad notes (outside the mode)
 p3 = 5
 # the weight for three notes
@@ -15,11 +15,10 @@ p5 = 3
 # the weight for echo
 p6 = 1
 # the weight for melody line
-p7 = 2
+p7 = 0.5
 
 # coefficient for similarity
 mean_coeff = np.array([2, 1, 1, 1, 1, 1, 1, 2])
-standard_coeff = np.array([1, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 1])
 emotion_coeff = np.array(
     [1.5, 0.5, 0.8, 1, 1.5, 0.5, 0.8, 2, 1.5, 0.5, 0.8, 1, 1.5, 0.5, 0.8, 3]
 )
@@ -33,7 +32,7 @@ interval_emotion_dict = {
     7: 5,  # seventh: lead, strong tension
 }
 # the target value
-pitch_target = 9.5
+pitch_target = 9
 
 # rate of three types of mutation
 mutation_rate_1 = 2
@@ -46,7 +45,6 @@ class PitchParameter(TrackParameterBase):
     def __init__(self, track: Track) -> None:
         super().__init__(track)
         self.means = np.zeros(self.bar_number, dtype=float)
-        self.standard = np.zeros(self.bar_number, dtype=float)
         self.emotion = np.zeros(self.bar_number * 2, dtype=float)
         self.melody_line = np.zeros(
             self.bar_number * BAR_LENGTH // NOTE_UNIT, dtype=float
@@ -75,19 +73,12 @@ class PitchParameter(TrackParameterBase):
                 # and the first note of the current bar
                 interval = bar[0].pitch - self.bars[idx - 1][-1].pitch
                 values.append(abs(interval) / 3)
-
             if not values:
                 self.means[idx] = 0
-                self.standard[idx] = 0
                 continue
-
             self.means[idx] = np.mean(values)
-            self.standard[idx] = np.std(values)
 
     def _update_three_note_parameters(self):
-        """Calculate the score of three notes in a bar.
-        If the pitches of three notes is similar to an arithmetic sequence, it has higher score.
-        The more three notes, the lower the score."""
         for bar in self.bars:
             score_in_bar = 0
             for idx in range(len(bar) - 2):
@@ -118,7 +109,6 @@ class PitchParameter(TrackParameterBase):
 
     @staticmethod
     def _pitch_similarity_of_bars(bar1: Bar, bar2: Bar):
-        """Calculate the similarity of the pitch of two bars."""
         diff1 = np.zeros(BAR_LENGTH // NOTE_UNIT, dtype=int)
         diff2 = np.zeros(BAR_LENGTH // NOTE_UNIT, dtype=int)
         bar1_start = bar1[0].start_time
@@ -166,8 +156,6 @@ class GAForPitch(TrackGABase):
         param = PitchParameter(track)
         mean_diff = np.abs(param.means - self.ref_param.means)
         f1 = p1 * np.exp(-(np.dot(mean_coeff, mean_diff) / self.bar_number))
-        standard_diff = np.abs(param.standard - self.ref_param.standard)
-        f2 = p2 * np.exp(-(np.dot(standard_coeff, standard_diff) / self.bar_number))
         f3 = p4 * param.three_notes / self.bar_number
         emotion_diff = np.abs(param.emotion - self.ref_param.emotion)
         f4 = p5 * np.exp(-(np.dot(emotion_coeff, emotion_diff) / (self.bar_number * 2)))
@@ -175,9 +163,9 @@ class GAForPitch(TrackGABase):
         f6 = p7 * np.corrcoef(param.melody_line, self.ref_param.melody_line)[0, 1]
 
         if DEBUG and random() < 0.01:
-            print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5} \t {f6}")
+            print(f"{f1} \t {f3} \t {f4} \t {f5} \t {f6}")
 
-        return f1 + f2 + f3 + f4 + f5 + f6
+        return f1 + f3 + f4 + f5 + f6
 
     def crossover(self):
         # No crossover for pitch

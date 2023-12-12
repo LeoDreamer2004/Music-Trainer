@@ -5,15 +5,13 @@ from copy import deepcopy
 
 DEBUG = False
 # the weight for strong beats
-r1 = 1
+r1 = 8
 # the weight for echo
-r2 = 0.5
+r2 = 4
 # the punishment for strong notes on weak beats
 r3 = 0.3
 # the punishment for long notes
 r4 = 0.3
-# the punishment for neighboring notes with large length gap
-r5 = 0.0
 # the target value
 rhythm_target = 1.2
 
@@ -64,6 +62,7 @@ class RhythmParameter(TrackParameterBase):
             self.echo += self._rhythm_similarity_of_bars(
                 self.bars[bar + 1], self.bars[bar + 3]
             )
+        self.echo /= self.bar_number
 
     def _update_long_notes(self):
         # Too many long notes are not welcomed
@@ -77,7 +76,7 @@ class RhythmParameter(TrackParameterBase):
 
     def _update_neighboring_notes(self):
         # We don't want a quarter note followed by an eighth note, vice versa
-        self.neighboring_notes = 0
+        self.neighboring_notes = 0.0
         notes = self.track.note
         for idx in range(len(notes) - 1):
             if abs(notes[idx].length - notes[idx + 1].length) == HALF - EIGHTH:
@@ -102,19 +101,16 @@ class GAForRhythm(TrackGABase):
     @staticmethod
     def get_fitness(track: Track) -> float:
         param = RhythmParameter(track)
-        f1 = (param.strong_beats - 2 * param.bar_number) * r1
+        f1 = (param.strong_beats - 2 * param.bar_number) * r1 / track.bar_number
         # give encouragement if echo is high
         f2 = param.echo * r2
         # give punishment if there are strong notes on weak beats
         f3 = -param.strong_notes_on_weak_beats * r3
         # give punishment if there are too many long notes
         f4 = -param.long_notes * r4
-        # give punishment if there are too many neighboring notes
-        # with large length gap
-        f5 = -param.neighboring_notes * r5
         if DEBUG and random() < 0.01:
-            print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5}")
-        return f1 + f2 + f3 + f4 + f5
+            print(f"{f1} \t {f2} \t {f3} \t {f4}")
+        return f1 + f2 + f3 + f4
 
     def crossover(self):
         for i in range(len(self.population)):

@@ -36,6 +36,7 @@ def main():
 
     s = generate_midi(key_mode)
     s.tracks.append(result.to_track())
+
     # accompaniment (stolen from reference)
     if with_accompaniment:
         for note in left_hand.note:

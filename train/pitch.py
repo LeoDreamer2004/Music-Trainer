@@ -3,7 +3,7 @@ from random import choice, randint, random
 import numpy as np
 from .base import *
 
-DEBUG = True
+DEBUG = False
 # the weight for mean, standard deviation of intervals
 p1, p2 = 2, 2
 # the weight for bad notes (outside the mode)
@@ -15,7 +15,7 @@ p5 = 3
 # the weight for echo
 p6 = 1
 # the weight for melody line
-p7 = 3
+p7 = 2
 
 # coefficient for similarity
 mean_coeff = np.array([2, 1, 1, 1, 1, 1, 1, 2])
@@ -33,7 +33,7 @@ interval_emotion_dict = {
     7: 5,  # seventh: lead, strong tension
 }
 # the target value
-pitch_target = 10
+pitch_target = 9.5
 
 # rate of three types of mutation
 mutation_rate_1 = 2

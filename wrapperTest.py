@@ -18,7 +18,7 @@ def generate_random_midi_test():
 
 
 def read_midi_test():
-    tracks = parse_midi("midi/random.mid")
+    tracks = parse_midi("midi/test.mid")
     right_hand, left_hand = tracks
     right_hand.print_brief_info()
     print("----------------")

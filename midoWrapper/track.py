@@ -36,7 +36,7 @@ class Track:
         print(f"Bar: {self.bar_number}")
 
     @staticmethod
-    def from_track(track: mido.MidiTrack):
+    def from_track(track: mido.MidiTrack) -> "Track":
         """Generate a track from a midi track.
         Available for chords."""
 

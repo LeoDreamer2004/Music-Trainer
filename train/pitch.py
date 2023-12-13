@@ -3,9 +3,11 @@ from random import choice, randint, random
 import numpy as np
 from .base import *
 
+# TODO: Fix bugs on _pitch_similarity_of_bars
+
 DEBUG = False
 # the weight for mean, standard deviation of intervals
-p1, p2 = 2, 0
+p1 = 3
 # the weight for bad notes (outside the mode)
 p3 = 5
 # the weight for three notes
@@ -15,7 +17,7 @@ p5 = 3
 # the weight for echo
 p6 = 1
 # the weight for melody line
-p7 = 0.5
+p7 = 2
 
 # coefficient for similarity
 mean_coeff = np.array([2, 1, 1, 1, 1, 1, 1, 2])
@@ -51,7 +53,7 @@ class PitchParameter(TrackParameterBase):
         )
         self.bad_notes = 0
         self.three_notes = 0.0
-        self.echo = 0
+        self.echo = 0.0
         self.update_parameters()
 
     def update_parameters(self):
@@ -124,6 +126,7 @@ class PitchParameter(TrackParameterBase):
     def _update_echo(self):
         # Bar 0 and 2; 1 and 3; 4 and 6; 5 and 7 are echo, etc.
         # If they have the similar pitch difference, the echo will be higher
+        self.echo = 0.0
         for bar in range(0, self.bar_number, 4):
             self.echo += self._pitch_similarity_of_bars(
                 self.bars[bar], self.bars[bar + 2]

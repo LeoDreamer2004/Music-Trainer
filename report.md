@@ -8,7 +8,7 @@
 
 ## 实验工具
 
-midi文件能更好地建立起音乐与计算机之间的联系。在Python语言中，对midi文件有较好的第三方模块支持，以下代码基于其中使用最多的`mido`库进行。
+ midi 文件能更好地建立起音乐与计算机之间的联系。在Python语言中，对 midi 文件有较好的第三方模块支持，以下代码基于其中使用最多的`mido`库进行。
 
 为此，在文件目录下打开命令行中执行
 
@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 来安装必要的依赖。
 
-所有的midi文件均存放于`midi`文件夹下。为了能更方便地预览midi，使用musescore4进行midi的展示。
+所有的 midi 文件均存放于` midi `文件夹下。为了能更方便地预览 midi ，使用musescore4进行 midi 的展示。
 
 ---
 
@@ -61,7 +61,7 @@ $$f_2 = \frac{r_2}{n}\sum_{i,j:\rm{Bar}} c_{i,j}=\frac{r_2}{n}\sum_{i,j:\rm{Bar}
 
 - 我们希望强调强弱拍的差别，不希望出现弱拍强音。如果出现，给予相应的惩罚。
 ![节奏实例2](img/rhythm2.png)
-例如，本例中的附点四分音符处于弱拍，对其给予负权值。
+本例中的附点四分音符处于弱拍，对其给予负权值。
 **适应度公式：**
 $$f_3 = -r_3\sum_{i: \rm{Bar}} \frac{b_i}{S_i}$$
 这里 $r_3$ 是权重系数，下标 $i$ 表示小节，$b_i$ 表示本小节中弱拍强音的个数，$S_i$ 表示本小节所有的音符个数。
@@ -91,19 +91,39 @@ $$f_{\rm{rhythm}} = f_1+f_2+f_3+f_4$$
 
 #### 适应度函数
 
-音调的适应度函数相较于节奏要复杂的多，这是因为音调旋律走向好坏受人的主观影响很大。为了更好地指导进化方向，我们准备一个现有的参考midi文件，它将为之后的遗传产生重要影响。关于这个midi的选取，我们在随后的代码实现中再详细提及。
+音调的适应度函数相较于节奏要复杂的多，这是因为音调旋律走向好坏受人的主观影响很大。为了更好地指导进化方向，我们准备一个现有的参考 midi 文件，它将为之后的遗传产生重要影响。关于这个 midi 的选取，我们在随后的代码实现中再详细提及。
 
 - 比较两首片段的平均音程。在每一小节中分别计算所有相邻音符的音程，特别地计入本小节第一个音和上小节最后一个音之间的音程，构造一个函数来衡量相似度。
-特别地，我们还可以给每个小节加上一个权值，用于强调小节的作用，例如第一小节赋值较大，用于强调第一小节更应与参考midi相似。
+特别地，我们还可以给每个小节加上一个权值，用于强调小节的作用，例如第一小节赋值较大，用于强调第一小节更应与参考 midi 相似。
 **适应度公式：**
-$$f_1 = p_1 \exp \left\{-{\frac{1}{n}\sum_{i:\rm{Bar}}x_i(\mu_i-\hat \mu_i)} \right\}$$
-这里 $p_1$ 是权重系数，$n$ 是小节个数，$x_i$ 是小节权值，$\mu_i, \hat \mu_i$ 分别表示现有midi和参考midi的第 $i$ 小节平均音程。
+$$f_1 = p_1 \exp \left\{ -{\frac{1}{n}\sum_{i:\rm{Bar}}x_i(\mu_i-\hat \mu_i)} \right\} $$
+这里 $p_1$ 是权重系数，$n$ 是小节个数，$x_i$ 是小节权值，$\mu_i, \hat \mu_i$ 分别表示现有 midi 和参考 midi 的第 $i$ 小节平均音程。
 
 - 对于相邻的三个音，我们鼓励它们音符相连或按照音阶上行下行，而反对它们中间的音明显高于或低于两侧。对这两种情形给予相应的正负权值。
 ![音调实例1](img/pitch1.png)
+本例中前一小节显然比后一小节更加理想，前者得正权值，后者得负权值。
 **适应度公式：**
 $$f_2 = \frac{p_2}{n}\sum_{i: \rm{Bar}}{\left( Ss_i-Tt_i \right)} $$
 这里 $p_2$ 是权重系数，$S, T$ 是奖励惩罚系数，$s_i, t_i$ 是奖励惩罚三元音符组个数。
+
+- 我们希望曲目的旋律进行色彩与参考 midi 相似。由于音乐中的强拍大致决定了整个曲子的和弦走向，我们充分考虑每一个强拍音的乐理功能，并根据不同的功能对每个音设置不同的“色彩值”，随后将其与参考 midi 相比。
+    音级     | 功能    |色彩值
+    :--------: | :-----: | :-----:
+    I（主音）  | 稳定、终止 | 1
+    III（中音）、VI（下中音） | 介稳、半终止 | 2~3
+    II（上主音）、V（属音） | 不稳定、解决 | 3~4
+    IV（下属音）、VII（导音）  | 极不稳定 | 4~5
+
+    **适应度公式：**
+    $$f_3 = p_3 \exp \left\{ -{\frac{1}{n}\sum_{\alpha:\rm{Notes}}y_\alpha(\lambda_\alpha-\hat \lambda_\alpha)} \right\} $$
+    这里 $p_3$ 是权重系数，$y_\alpha$ 是强拍音权值，$\lambda_\alpha, \hat \lambda_\alpha$ 分别表示现有 midi 和参考 midi 的强拍音 $\alpha$ 色彩值。
+
+- 类似于节奏，在音调中我们也鼓励旋律反复或者（调内）平移倒影的出现。
+**适应度公式：**
+$$f_4 = \frac{p_4}{n}\sum_{i,j:\rm{Bar}} g_{i,j}$$
+这里 $p_4$ 是权重系数，$g_{i,j}$ 是用于衡量 $i,j$ 小节音调相似度的函数。
+
+- 我们还提出旋律线起伏的作用
 
 ---
 
@@ -111,7 +131,7 @@ $$f_2 = \frac{p_2}{n}\sum_{i: \rm{Bar}}{\left( Ss_i-Tt_i \right)} $$
 
 ### 模块包装
 
-`mido`原本的逻辑是把midi文件剖分为若干音轨，每个音轨是一个列表，内部按照 **事件** 逻辑来存储音符信息。例如元事件：
+`mido`原本的逻辑是把 midi 文件剖分为若干音轨，每个音轨是一个列表，内部按照 **事件** 逻辑来存储音符信息。例如元事件：
 
 ```py
 mido.MetaMessage("key_signature", key="C", time=0)
@@ -143,7 +163,7 @@ class Note:
         return self.start_time + self.length
 ```
 
-类`Note`中的音符包含音高、长度、起始时间（指在音轨中的绝对时间，而非原本`mido`库中与上一事件的相对时间）和音量信息，同时提供查询结束时间的属性。此外，也提供了音名（例如C5）与midi音高编码（例如72）之间的转化接口，判断一个音是否在一个固定的调式中等等。
+类`Note`中的音符包含音高、长度、起始时间（指在音轨中的绝对时间，而非原本`mido`库中与上一事件的相对时间）和音量信息，同时提供查询结束时间的属性。此外，也提供了音名（例如C5）与 midi 音高编码（例如72）之间的转化接口，判断一个音是否在一个固定的调式中等等。
 
 特别地，我们提供了一个随机生成指定调式音符的接口：
 
@@ -165,11 +185,11 @@ class Track:
 
 类`Track`当中重点强调了乐器和调式的属性，同时把所有的音符置于一个列表当中。
 
-其中提供了与`mido`内置的`midiTrack`类型的相互转化接口：
+其中提供了与`mido`内置的` midi Track`类型的相互转化接口：
 
 ```py
-def from_track(track: mido.MidiTrack) -> "Track": ...
-def to_track(self) -> mido.MidiTrack: ...
+def from_track(track: mido. midi Track) -> "Track": ...
+def to_track(self) -> mido. midi Track: ...
 ```
 
 同时，由于我们的节奏训练和音调训练是分离进行的，因此我们给出了两个函数，分别用于生成随机音轨和在给定节奏之上生成随机的音高：
@@ -187,23 +207,23 @@ def inverse(self, center): ...
 def retrograde(self): ...
 ```
 
-最后，我们也提供了一些简单的函数，分别用于进行midi文件的生成、解析、存储。
+最后，我们也提供了一些简单的函数，分别用于进行 midi 文件的生成、解析、存储。
 
 ```py
-def generate_midi(key: Key_T = None): ...
-def parse_midi(filename: str): ...
-def save_midi(s: mido.MidiFile, filename: str): ...
+def generate_ midi (key: Key_T = None): ...
+def parse_ midi (filename: str): ...
+def save_ midi (s: mido. midi File, filename: str): ...
 ```
 
 ### 音轨的生成与读取
 
 具体内容详见 [测试代码](wrapperTest.py) 。
 
-- 在`generate_random_midi_test`中，我们建立了一个空白的midi文件，并利用`generate_random_track`生成了一个#g小调的4小节随机音乐片段。随后将音轨进行深拷贝，再对其作逆行变换，作为第二条音轨添加进去。这样，输出了一个双音轨的音乐片段，其中两个音轨互为逆行关系。
+- 在`generate_random_ midi _test`中，我们建立了一个空白的 midi 文件，并利用`generate_random_track`生成了一个#g小调的4小节随机音乐片段。随后将音轨进行深拷贝，再对其作逆行变换，作为第二条音轨添加进去。这样，输出了一个双音轨的音乐片段，其中两个音轨互为逆行关系。
 ![随机片段](img/random_piece.png)
 
-- 在`read_midi_test`中，我们对一个现有的midi文件进行解析，并打印出基本信息。这段midi节选自久石让的《Summer》。可以对`Track`类型直接调用`print`函数来输出内部音符的具体信息。
-![测试midi](img/test_midi.png)
+- 在`read_ midi _test`中，我们对一个现有的 midi 文件进行解析，并打印出基本信息。这段 midi 节选自久石让的《Summer》。可以对`Track`类型直接调用`print`函数来输出内部音符的具体信息。
+![测试 midi ](img/test_ midi .png)
 
     ```txt
     Key: D
@@ -217,4 +237,4 @@ def save_midi(s: mido.MidiFile, filename: str): ...
     Bar: 8
     ```
 
-![引用midi](img/reference_midi.png)
+![引用 midi ](img/reference_ midi .png)

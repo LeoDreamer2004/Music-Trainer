@@ -315,5 +315,11 @@ class TrackGABase(metaclass=ABCMeta): ...
 
 ![结果midi](./img/result.png)
 
+## 参考文献
+
+1. Dragan Mati´c, A genetic algorithm for composing music, Yugoslav Journal of Operations Research, 20 (2010), 157–177.
+2. 杜鹏, 基于遗传算法与人工神经网络的二声部创意曲自动生成, 2007.
+3. 曹西征, 张爱丽, 徐久成, 基于遗传算法的智能作曲技术研究, 计算机工程与应用, 44 (2008), 206-209.
+
 <p align=right>原梓轩 陈润璘 王孝文 林晋 林鸿凯 柯宇斌</p>
 <p align=right>2023.12</p>

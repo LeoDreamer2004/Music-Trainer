@@ -8,7 +8,7 @@
 
 ## 实验工具
 
- midi 文件能更好地建立起音乐与计算机之间的联系。在Python语言中，对 midi 文件有较好的第三方模块支持，以下代码基于其中使用最多的`mido`库进行。
+midi 文件能更好地建立起音乐与计算机之间的联系。在 Python 语言中，对 midi 文件有较好的第三方模块支持，以下代码基于其中使用最多的`mido`库进行。
 
 为此，在文件目录下打开命令行中执行
 
@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 来安装必要的依赖。
 
-所有的 midi 文件均存放于` midi `文件夹下。为了能更方便地预览 midi ，使用musescore4进行 midi 的展示。
+所有的 midi 文件均存放于` midi `文件夹下。为了能更方便地预览 midi ，使用 musescore4 进行 midi 的展示。
 
 ---
 
@@ -51,18 +51,25 @@ pip install -r requirements.txt
 ![节奏实例1](img/ryhthm1.png)
 在这个例子当中，第一小节的一三拍都有音，而第二小节则不然，因此我们给第二小节一个负权重。
 **适应度公式：**
-$$f_1 = \frac{r_1}{n}(b-2n)$$
+
+$$
+f_1 = \frac{r_1}{n}(b-2n)
+$$
 这里 $r_1$ 是权重系数，$b$ 是强拍音数量，$n$ 是小节数。
 
 - 如果一个曲子的节奏存在呼应，那么是很好的。特别地，对于一个8小节的曲子，我们希望$A_8 = \left\{(1,3); (2,4); (4,6); (5,7)\right\}$小节是呼应的。可以简单建立一个描述两小节相似度的函数。
 **适应度公式：**
-$$f_2 = \frac{r_2}{n}\sum_{i,j:\rm{Bar}} c_{i,j}=\frac{r_2}{n}\sum_{i,j:\rm{Bar}} \frac{\left| I\cap J\right|^2}{\left| I \right|\left| J \right|}$$
+
+$$
+f_2 = \frac{r_2}{n}\sum_{i,j:\rm{Bar}} c_{i,j}=\frac{r_2}{n}\sum_{i,j:\rm{Bar}} \frac{\left| I\cap J\right|^2}{\left| I \right|\left| J \right|}
+$$
 这里 $r_2$ 是权重系数，$i,j$ 表示要比较的小节（例如对于8小节片段，数对 $(i,j)$ 遍历集合 $A_8$），而 $I, J$ 表示 $i,j$ 两小节的音符集合。两个音符相同当且仅当他们时值相同，且在小节中的相对位置相同。
 
 - 我们希望强调强弱拍的差别，不希望出现弱拍强音。如果出现，给予相应的惩罚。
 ![节奏实例2](img/rhythm2.png)
 本例中的附点四分音符处于弱拍，对其给予负权值。
 **适应度公式：**
+
 $$
 f_3 = -r_3\sum_{i: \rm{Bar}} \frac{b_i}{S_i}
 $$
@@ -128,15 +135,20 @@ $$
     IV（下属音）、VII（导音）  | 极不稳定 | 4~5
 
     **适应度公式：**
-    $$f_3 = p_3 \exp \left\{ -{\frac{1}{n}\sum_{\alpha:\rm{Notes}}y_\alpha(\lambda_\alpha-\hat \lambda_\alpha)} \right\} $$
+    $$
+    f_3 = p_3 \exp \left\{ -{\frac{1}{n}\sum_{\alpha:\rm{Notes}}y_\alpha(\lambda_\alpha-\hat \lambda_\alpha)} \right\}
+    $$
     这里 $p_3$ 是权重系数，$y_\alpha$ 是强拍音权值，$\lambda_\alpha, \hat \lambda_\alpha$ 分别表示现有 midi 和参考 midi 的强拍音 $\alpha$ 色彩值。
 
 - 类似于节奏，在音调中我们也鼓励旋律反复或者（调内）平移倒影的出现。
 **适应度公式：**
-$$f_4 = \frac{p_4}{n}\sum_{i,j:\rm{Bar}} g_{i,j}$$
+
+$$
+f_4 = \frac{p_4}{n}\sum_{i,j:\rm{Bar}} g_{i,j}
+$$
 这里 $p_4$ 是权重系数，$g_{i,j}$ 是用于衡量 $i,j$ 小节音调相似度的函数。
 
-- 我们还提出旋律线起伏的作用。旋律线的含义指的是音乐的上行与下行，我们以时间为自变量，音符音调为
+- 我们还提出旋律线起伏的作用。旋律线的含义指的是音乐的上行与下行，我们以时间为自变量，音符音调为因变量，计算
 
 ---
 

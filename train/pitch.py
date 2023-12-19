@@ -49,7 +49,7 @@ class PitchParameter(TrackParameterBase):
         self.means = np.zeros(self.bar_number, dtype=float)
         self.emotion = np.zeros(self.bar_number * 2, dtype=float)
         self.melody_line = np.zeros(
-            self.bar_number * self.settings.BAR_LENGTH // self.settings.NOTE_UNIT,
+            self.bar_number * self.settings.bar_length // self.settings.note_unit,
             dtype=float,
         )
         self.bad_notes = 0
@@ -103,25 +103,25 @@ class PitchParameter(TrackParameterBase):
     def _update_emotions(self):
         self.emotion = np.zeros(self.bar_number * 2, dtype=float)
         for note in self.track.note:
-            if note.start_time % self.settings.HALF == 0:
+            if note.start_time % self.settings.half == 0:
                 order = Note.ord_in_mode(note.pitch, self.track.key)
                 self.emotion[
-                    note.start_time // self.settings.HALF
+                    note.start_time // self.settings.half
                 ] = interval_emotion_dict[order]
         for i in range(self.bar_number * 2):
             if self.emotion[i] == 0:
                 self.emotion[i] = 3  # default emotion
 
     def _pitch_similarity_of_bars(self, bar1: Bar, bar2: Bar):
-        diff1 = np.zeros(self.settings.BAR_LENGTH // self.settings.NOTE_UNIT, dtype=int)
-        diff2 = np.zeros(self.settings.BAR_LENGTH // self.settings.NOTE_UNIT, dtype=int)
+        diff1 = np.zeros(self.settings.bar_length // self.settings.note_unit, dtype=int)
+        diff2 = np.zeros(self.settings.bar_length // self.settings.note_unit, dtype=int)
         bar1_start = bar1[0].start_time
         bar2_start = bar2[0].start_time
         for idx in range(len(bar1) - 1):
-            idx1 = (bar1[idx].start_time - bar1_start) // self.settings.NOTE_UNIT
+            idx1 = (bar1[idx].start_time - bar1_start) // self.settings.note_unit
             diff1[idx1] = bar1[idx].pitch - bar1[idx + 1].pitch
         for idx in range(len(bar2) - 1):
-            idx2 = (bar2[idx].start_time - bar2_start) // self.settings.NOTE_UNIT
+            idx2 = (bar2[idx].start_time - bar2_start) // self.settings.note_unit
             diff2[idx2] = bar2[idx].pitch - bar2[idx + 1].pitch
         return np.mean(np.abs(diff1 - diff2))
 
@@ -139,12 +139,12 @@ class PitchParameter(TrackParameterBase):
 
     def _update_melody_line(self):
         self.melody_line = np.zeros(
-            self.bar_number * self.settings.BAR_LENGTH // self.settings.NOTE_UNIT,
+            self.bar_number * self.settings.bar_length // self.settings.note_unit,
             dtype=float,
         )
         for note in self.track.note:
-            note_size = note.length // self.settings.NOTE_UNIT
-            start_idx = note.start_time // self.settings.NOTE_UNIT
+            note_size = note.length // self.settings.note_unit
+            start_idx = note.start_time // self.settings.note_unit
             # fill the melody line with the pitch of the note
             self.melody_line[start_idx : start_idx + note_size] = note.pitch
         self.melody_line -= np.mean(self.melody_line)  # normalize
@@ -218,7 +218,7 @@ class GAForPitch(TrackGABase):
     def _mutate_4(self, track: Track):
         # if a short note has a big interval with the next note, change it
         for idx, note in enumerate(track.note[:-1]):
-            if note.length <= self.settings.EIGHTH:
+            if note.length <= self.settings.eighth:
                 next_pitch = track.note[idx + 1].pitch
                 if abs(note.pitch - next_pitch) > 7:
                     note.pitch = Note.random_pitch_in_mode(

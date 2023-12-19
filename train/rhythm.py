@@ -44,7 +44,7 @@ class RhythmParameter(TrackParameterBase):
         for bar in self.bars:
             bad_beats = 0
             for note in bar:
-                if note.start_time % self.settings.HALF == 0:
+                if note.start_time % self.settings.half == 0:
                     self.strong_beats += 1
                 # elif note.start_time % QUARTER == 0:
                 # self.weak_beats += 1
@@ -69,9 +69,9 @@ class RhythmParameter(TrackParameterBase):
         self.long_notes = 0
         for bar in self.bars:
             for note in bar:
-                if note.length == self.settings.HALF:
+                if note.length == self.settings.half:
                     self.long_notes += 0.5
-                elif note.length >= self.settings.QUARTER:
+                elif note.length >= self.settings.quarter:
                     self.long_notes += 0.1
 
     def _update_neighboring_notes(self):
@@ -81,7 +81,7 @@ class RhythmParameter(TrackParameterBase):
         for idx in range(len(notes) - 1):
             if (
                 abs(notes[idx].length - notes[idx + 1].length)
-                == self.settings.HALF - self.settings.EIGHTH
+                == self.settings.half - self.settings.eighth
             ):
                 self.neighboring_notes += 1
 
@@ -92,7 +92,7 @@ class RhythmParameter(TrackParameterBase):
             for note2 in bar2:
                 if (
                     note1.start_time - note2.start_time
-                ) % self.settings.BAR_LENGTH == 0:
+                ) % self.settings.bar_length == 0:
                     same += 1
         return (same**2) / (len(bar1) * len(bar2))
 
@@ -159,8 +159,8 @@ class GAForRhythm(TrackGABase):
         idx = randint(0, len(track.note) - 3)
         note1, note2 = track.note[idx], track.note[idx + 1]
         if (
-            note2.start_time // self.settings.BAR_LENGTH
-            != note1.start_time // self.settings.BAR_LENGTH
+            note2.start_time // self.settings.bar_length
+            != note1.start_time // self.settings.bar_length
         ):
             # The two notes are in different bars, don't swap them
             return
@@ -172,10 +172,10 @@ class GAForRhythm(TrackGABase):
         # Split a note into two notes
         idx = randint(0, len(track.note) - 2)
         note = track.note[idx]
-        if note.length <= self.settings.NOTE_UNIT:  # We can't split it
+        if note.length <= self.settings.note_unit:  # We can't split it
             return
         while True:
-            length = choice(self.settings.NOTE_LENGTH)
+            length = choice(self.settings.note_length)
             if length < note.length:
                 end = note.end_time
                 note.length -= length
@@ -187,7 +187,7 @@ class GAForRhythm(TrackGABase):
         # merge two notes into one note
         idx = randint(0, len(track.note) - 3)
         note = track.note[idx]
-        if track.note[idx + 1].start_time % self.settings.BAR_LENGTH == 0:
+        if track.note[idx + 1].start_time % self.settings.bar_length == 0:
             # The next note is at the beginning of a bar, we can't merge it
             return
         note.length = track.note[idx + 1].end_time - note.start_time
@@ -199,7 +199,7 @@ class GAForRhythm(TrackGABase):
         bars = track.split_into_bars()
         bars[idx - 2] = deepcopy(bars[idx])
         for note in bars[idx - 2]:
-            note.start_time -= self.settings.BAR_LENGTH * 2
+            note.start_time -= self.settings.bar_length * 2
         track.join_bars(bars)
 
     def run(self, generation):

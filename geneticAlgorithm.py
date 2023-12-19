@@ -34,13 +34,13 @@ def main():
     result = ga_pitch.run(iteration_num)
 
     s = Midi(ref_track.settings)
-    s.settings.BPM = 120
+    s.settings.bpm = 120
     s.tracks.append(result)
 
     # accompaniment (stolen from reference)
     if with_accompaniment:
         for note in left_hand.note:
-            note.velocity = ref_track.settings.VELOCITY
+            note.velocity = ref_track.settings.velocity
         s.tracks.append(left_hand)
 
     s.save_midi(output_file)

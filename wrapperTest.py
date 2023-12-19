@@ -4,7 +4,7 @@ from copy import deepcopy
 
 def generate_random_midi_test():
     settings = MusicSettings()
-    settings.KEY = "G#m"
+    settings.key = "G#m"
     s = Midi(settings)
     track = Track(settings, 0)
     track.generate_random_track(4)  # 4 bars

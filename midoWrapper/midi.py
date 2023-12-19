@@ -17,18 +17,18 @@ class Midi:
         s = mido.MidiFile()
         meta_track = mido.MidiTrack()
         meta_track.append(
-            mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(self.settings.BPM))
+            mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(self.settings.bpm))
         )
         meta_track.append(
             mido.MetaMessage(
                 "time_signature",
-                numerator=self.settings.NUMERATOR,
-                denominator=self.settings.DENOMINATOR,
+                numerator=self.settings.numerator,
+                denominator=self.settings.denominator,
             )
         )
-        if self.settings.KEY is not None:
+        if self.settings.key is not None:
             meta_track.append(
-                mido.MetaMessage("key_signature", key=self.settings.KEY, time=0)
+                mido.MetaMessage("key_signature", key=self.settings.key, time=0)
             )
         s.tracks.append(meta_track)
         for track in self.tracks:
@@ -69,9 +69,9 @@ class Midi:
     def _parse_midi_parameters(self, track: mido.MidiTrack):
         for msg in track:
             if msg.type == "set_tempo":
-                self.settings.BPM = mido.tempo2bpm(msg.tempo)
+                self.settings.bpm = mido.tempo2bpm(msg.tempo)
             elif msg.type == "time_signature":
-                self.settings.NUMERATOR = msg.numerator
-                self.settings.DENOMINATOR = msg.denominator
+                self.settings.numerator = msg.numerator
+                self.settings.denominator = msg.denominator
             elif msg.type == "key_signature":
-                self.settings.KEY = msg.key
+                self.settings.key = msg.key

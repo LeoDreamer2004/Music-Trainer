@@ -49,7 +49,7 @@ class Track:
             if msg.type == "program_change":
                 ga_track.instrument = msg.program
             elif msg.type == "key_signature":
-                ga_track.settings.KEY = msg.key
+                ga_track.settings.key = msg.key
             elif msg.type == "note_on":
                 time += msg.time
                 note_dict[msg.note] = (time, msg.velocity)
@@ -105,37 +105,37 @@ class Track:
     def generate_random_track(self, bar_number: int):
         """Generate a random track with the given bar number"""
         for i in range(bar_number - 1):
-            length = self.settings.BAR_LENGTH
+            length = self.settings.bar_length
             while length > 0:
-                note_length = choice(self.settings.NOTE_LENGTH)
+                note_length = choice(self.settings.note_length)
                 if note_length <= length:
                     note = Note(
                         0,
                         note_length,
-                        (i + 1) * self.settings.BAR_LENGTH - length,
-                        self.settings.VELOCITY,
+                        (i + 1) * self.settings.bar_length - length,
+                        self.settings.velocity,
                     )
                     length -= note_length
                     self.note.append(note)
 
         # For the last bar, we want to make sure that the last note is a half note
-        length = self.settings.BAR_LENGTH
-        while length > self.settings.HALF:
-            note_length = choice(self.settings.NOTE_LENGTH)
-            if note_length <= length - self.settings.HALF:
+        length = self.settings.bar_length
+        while length > self.settings.half:
+            note_length = choice(self.settings.note_length)
+            if note_length <= length - self.settings.half:
                 note = Note(
                     0,
                     note_length,
-                    bar_number * self.settings.BAR_LENGTH - length,
-                    self.settings.VELOCITY,
+                    bar_number * self.settings.bar_length - length,
+                    self.settings.velocity,
                 )
                 length -= note_length
                 self.note.append(note)
         note = Note(
             0,
-            self.settings.HALF,
-            bar_number * self.settings.BAR_LENGTH - self.settings.HALF,
-            self.settings.VELOCITY,
+            self.settings.half,
+            bar_number * self.settings.bar_length - self.settings.half,
+            self.settings.velocity,
         )
         self.note.append(note)
         self.generate_random_pitch_on_rhythm(self)
@@ -145,14 +145,14 @@ class Track:
         """Split the track into bars."""
         bars = [[] for _ in range(self.bar_number)]
         for note in self.note:
-            idx = note.start_time // self.settings.BAR_LENGTH
+            idx = note.start_time // self.settings.bar_length
 
-            if note.end_time <= (idx + 1) * self.settings.BAR_LENGTH:
+            if note.end_time <= (idx + 1) * self.settings.bar_length:
                 bars[idx].append(note)
             else:
                 # The note exceeds the bar, split it into two parts
                 note1, note2 = deepcopy(note), deepcopy(note)
-                bar_time = (idx + 1) * self.settings.BAR_LENGTH
+                bar_time = (idx + 1) * self.settings.bar_length
                 note1.length = bar_time - note.start_time
                 note2.length = note.end_time - bar_time
                 note2.start_time = bar_time
@@ -173,11 +173,11 @@ class Track:
     @property
     def bar_number(self):
         """The number of bars"""
-        return math.ceil(self.full_length / self.settings.WHOLE)
+        return math.ceil(self.full_length / self.settings.whole)
 
     @property
     def key(self):
-        return self.settings.KEY
+        return self.settings.key
 
     def transpose(self, interval):
         """Transpose the track by the given interval"""

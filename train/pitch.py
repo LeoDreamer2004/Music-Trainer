@@ -49,7 +49,8 @@ class PitchParameter(TrackParameterBase):
         self.means = np.zeros(self.bar_number, dtype=float)
         self.emotion = np.zeros(self.bar_number * 2, dtype=float)
         self.melody_line = np.zeros(
-            self.bar_number * BAR_LENGTH // NOTE_UNIT, dtype=float
+            self.bar_number * self.settings.BAR_LENGTH // self.settings.NOTE_UNIT,
+            dtype=float,
         )
         self.bad_notes = 0
         self.three_notes = 0.0
@@ -102,24 +103,25 @@ class PitchParameter(TrackParameterBase):
     def _update_emotions(self):
         self.emotion = np.zeros(self.bar_number * 2, dtype=float)
         for note in self.track.note:
-            if note.start_time % HALF == 0:
+            if note.start_time % self.settings.HALF == 0:
                 order = Note.ord_in_mode(note.pitch, self.track.key)
-                self.emotion[note.start_time // HALF] = interval_emotion_dict[order]
+                self.emotion[
+                    note.start_time // self.settings.HALF
+                ] = interval_emotion_dict[order]
         for i in range(self.bar_number * 2):
             if self.emotion[i] == 0:
                 self.emotion[i] = 3  # default emotion
 
-    @staticmethod
-    def _pitch_similarity_of_bars(bar1: Bar, bar2: Bar):
-        diff1 = np.zeros(BAR_LENGTH // NOTE_UNIT, dtype=int)
-        diff2 = np.zeros(BAR_LENGTH // NOTE_UNIT, dtype=int)
+    def _pitch_similarity_of_bars(self, bar1: Bar, bar2: Bar):
+        diff1 = np.zeros(self.settings.BAR_LENGTH // self.settings.NOTE_UNIT, dtype=int)
+        diff2 = np.zeros(self.settings.BAR_LENGTH // self.settings.NOTE_UNIT, dtype=int)
         bar1_start = bar1[0].start_time
         bar2_start = bar2[0].start_time
         for idx in range(len(bar1) - 1):
-            idx1 = (bar1[idx].start_time - bar1_start) // NOTE_UNIT
+            idx1 = (bar1[idx].start_time - bar1_start) // self.settings.NOTE_UNIT
             diff1[idx1] = bar1[idx].pitch - bar1[idx + 1].pitch
         for idx in range(len(bar2) - 1):
-            idx2 = (bar2[idx].start_time - bar2_start) // NOTE_UNIT
+            idx2 = (bar2[idx].start_time - bar2_start) // self.settings.NOTE_UNIT
             diff2[idx2] = bar2[idx].pitch - bar2[idx + 1].pitch
         return np.mean(np.abs(diff1 - diff2))
 
@@ -137,11 +139,12 @@ class PitchParameter(TrackParameterBase):
 
     def _update_melody_line(self):
         self.melody_line = np.zeros(
-            self.bar_number * BAR_LENGTH // NOTE_UNIT, dtype=float
+            self.bar_number * self.settings.BAR_LENGTH // self.settings.NOTE_UNIT,
+            dtype=float,
         )
         for note in self.track.note:
-            note_size = note.length // NOTE_UNIT
-            start_idx = note.start_time // NOTE_UNIT
+            note_size = note.length // self.settings.NOTE_UNIT
+            start_idx = note.start_time // self.settings.NOTE_UNIT
             # fill the melody line with the pitch of the note
             self.melody_line[start_idx : start_idx + note_size] = note.pitch
         self.melody_line -= np.mean(self.melody_line)  # normalize
@@ -194,8 +197,7 @@ class GAForPitch(TrackGABase):
             mutate_type(track)
             self.population[i] = track
 
-    @staticmethod
-    def _mutate_1(track: Track):
+    def _mutate_1(self, track: Track):
         # If the interval between two notes is too large, change it
         for idx in range(len(track.note) - 1):
             if track.note[idx + 1].pitch - track.note[idx].pitch > 12:
@@ -203,23 +205,20 @@ class GAForPitch(TrackGABase):
             elif track.note[idx + 1].pitch - track.note[idx].pitch < -12:
                 track.note[idx].pitch -= 12
 
-    @staticmethod
-    def _mutate_2(track: Track):
+    def _mutate_2(self, track: Track):
         # Change the pitch of a random note
         idx = randint(0, len(track.note) - 2)
         track.note[idx].pitch = Note.random_pitch_in_mode(track.key)
 
-    @staticmethod
-    def _mutate_3(track: Track):
+    def _mutate_3(self, track: Track):
         # Swap two notes' pitch
         idx = randint(1, len(track.note) - 2)
         track.note[idx], track.note[idx - 1] = track.note[idx - 1], track.note[idx]
 
-    @staticmethod
-    def _mutate_4(track: Track):
+    def _mutate_4(self, track: Track):
         # if a short note has a big interval with the next note, change it
         for idx, note in enumerate(track.note[:-1]):
-            if note.length <= EIGHTH:
+            if note.length <= self.settings.EIGHTH:
                 next_pitch = track.note[idx + 1].pitch
                 if abs(note.pitch - next_pitch) > 7:
                     note.pitch = Note.random_pitch_in_mode(

@@ -10,11 +10,11 @@
 
 ---
 
-## 实验工具
+## 工具与使用方法
 
 midi 文件能更好地建立起音乐与计算机之间的联系。在 Python 语言中，对 midi 文件有较好的第三方模块支持，以下代码基于其中使用最多的 `mido` 库进行。
 
-为此，在文件目录下打开命令行中执行
+为此，确保计算机中已经拥有 python 环境，同时使用 pip 作为模块管理工具。在文件目录下打开命令行中执行
 
 ```shell
 pip install -r requirements.txt
@@ -28,7 +28,9 @@ pip install -r requirements.txt
 python ./geneticAlgorithm.py
 ```
 
-所有的 midi 文件均存放于 `midi` 文件夹下。为了能更方便地预览 midi ，使用 musescore4 进行 midi 的展示。
+若无法运行，请尝试将 `python` 修改为 `py` 或 `python3`。
+
+所有参考用的和生成出的 midi 文件均存放于 `midi` 文件夹下。为了能更方便地预览 midi ，使用 musescore4 进行 midi 的展示。
 
 ---
 

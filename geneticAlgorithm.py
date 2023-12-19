@@ -5,8 +5,6 @@ from train.rhythm import GAForRhythm
 
 reference_file = "midi/reference.mid"
 output_file = "midi/result.mid"
-bar_number = 8
-key_mode = "Db"
 with_accompaniment = True
 
 mutation_rate = 0.8
@@ -17,10 +15,11 @@ population_size = 20
 def main():
     t_start = time()
 
-    ref_track, left_hand = parse_midi(reference_file)
-
+    refmidi = Midi.from_midi(reference_file)
+    ref_track, left_hand = refmidi.tracks
+    bar_number = ref_track.bar_number
     population = [
-        Track(0, key_mode).generate_random_track(bar_number)
+        Track(ref_track.settings).generate_random_track(bar_number)
         for _ in range(population_size)
     ]
     ga_rhythm = GAForRhythm(population, mutation_rate)
@@ -28,22 +27,23 @@ def main():
 
     # Use the rhythm of the track forever
     population_with_rhythm = [
-        Track(0, key_mode).generate_random_pitch_on_rhythm(rhythm_track)
+        Track(ref_track.settings).generate_random_pitch_on_rhythm(rhythm_track)
         for _ in range(population_size)
     ]
     ga_pitch = GAForPitch(ref_track, population_with_rhythm, mutation_rate)
     result = ga_pitch.run(iteration_num)
 
-    s = generate_midi(key_mode)
-    s.tracks.append(result.to_track())
+    s = Midi(ref_track.settings)
+    s.settings.BPM = 120
+    s.tracks.append(result)
 
     # accompaniment (stolen from reference)
     if with_accompaniment:
         for note in left_hand.note:
-            note.velocity = VELOCITY
-        s.tracks.append(left_hand.to_track())
+            note.velocity = ref_track.settings.VELOCITY
+        s.tracks.append(left_hand)
 
-    save_midi(s, output_file)
+    s.save_midi(output_file)
     print(f"Time cost: {time() - t_start}s")
 
 

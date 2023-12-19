@@ -3,14 +3,16 @@ from copy import deepcopy
 
 
 def generate_random_midi_test():
-    s = generate_midi()
-    track = Track(0, "G#m")
+    settings = MusicSettings()
+    settings.KEY = "G#m"
+    s = Midi(settings)
+    track = Track(settings, 0)
     track.generate_random_track(4)  # 4 bars
-    s.tracks.append(track.to_track())
+    s.tracks.append(track)
     retrograde_track = deepcopy(track)  # MUST use deepcopy
     retrograde_track.retrograde()
-    s.tracks.append(retrograde_track.to_track())
-    save_midi(s, "midi/random.mid")
+    s.tracks.append(retrograde_track)
+    s.save_midi("midi/random.mid")
 
     # Expected result:
     # random.mid: A random piece with 4 bars in G sharp minor which has 2 tracks,
@@ -18,8 +20,8 @@ def generate_random_midi_test():
 
 
 def read_midi_test():
-    tracks = parse_midi("midi/test.mid")
-    right_hand, left_hand = tracks
+    midi = Midi.from_midi("midi/test.mid")
+    right_hand, left_hand = midi.tracks
     right_hand.print_brief_info()
     print("----------------")
     left_hand.print_brief_info()

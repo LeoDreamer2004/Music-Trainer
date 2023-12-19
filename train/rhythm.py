@@ -44,7 +44,7 @@ class RhythmParameter(TrackParameterBase):
         for bar in self.bars:
             bad_beats = 0
             for note in bar:
-                if note.start_time % HALF == 0:
+                if note.start_time % self.settings.HALF == 0:
                     self.strong_beats += 1
                 # elif note.start_time % QUARTER == 0:
                 # self.weak_beats += 1
@@ -69,9 +69,9 @@ class RhythmParameter(TrackParameterBase):
         self.long_notes = 0
         for bar in self.bars:
             for note in bar:
-                if note.length == HALF:
+                if note.length == self.settings.HALF:
                     self.long_notes += 0.5
-                elif note.length >= QUARTER:
+                elif note.length >= self.settings.QUARTER:
                     self.long_notes += 0.1
 
     def _update_neighboring_notes(self):
@@ -79,16 +79,20 @@ class RhythmParameter(TrackParameterBase):
         self.neighboring_notes = 0.0
         notes = self.track.note
         for idx in range(len(notes) - 1):
-            if abs(notes[idx].length - notes[idx + 1].length) == HALF - EIGHTH:
+            if (
+                abs(notes[idx].length - notes[idx + 1].length)
+                == self.settings.HALF - self.settings.EIGHTH
+            ):
                 self.neighboring_notes += 1
 
-    @staticmethod
-    def _rhythm_similarity_of_bars(bar1: Bar, bar2: Bar):
+    def _rhythm_similarity_of_bars(self, bar1: Bar, bar2: Bar):
         """Calculate the similarity of the rhythm of two bars."""
         same = 0
         for note1 in bar1:
             for note2 in bar2:
-                if (note1.start_time - note2.start_time) % BAR_LENGTH == 0:
+                if (
+                    note1.start_time - note2.start_time
+                ) % self.settings.BAR_LENGTH == 0:
                     same += 1
         return (same**2) / (len(bar1) * len(bar2))
 
@@ -126,7 +130,6 @@ class GAForRhythm(TrackGABase):
         for i in range(len(self.population)):
             if random() > self.mutation_rate:
                 continue
-            # TODO: mutation
             track = deepcopy(
                 self.population[choice([self.best_index, self.second_index])]
             )
@@ -151,27 +154,28 @@ class GAForRhythm(TrackGABase):
             mutate_type(track)
             self.population[i] = track
 
-    @staticmethod
-    def _mutate_1(track: Track):
+    def _mutate_1(self, track: Track):
         # Swap two notes' length
         idx = randint(0, len(track.note) - 3)
         note1, note2 = track.note[idx], track.note[idx + 1]
-        if note2.start_time // BAR_LENGTH != note1.start_time // BAR_LENGTH:
+        if (
+            note2.start_time // self.settings.BAR_LENGTH
+            != note1.start_time // self.settings.BAR_LENGTH
+        ):
             # The two notes are in different bars, don't swap them
             return
         end = note2.end_time
         note1.length, note2.length = note2.length, note1.length
         note2.start_time = end - note2.length
 
-    @staticmethod
-    def _mutate_2(track: Track):
+    def _mutate_2(self, track: Track):
         # Split a note into two notes
         idx = randint(0, len(track.note) - 2)
         note = track.note[idx]
-        if note.length <= NOTE_UNIT:  # We can't split it
+        if note.length <= self.settings.NOTE_UNIT:  # We can't split it
             return
         while True:
-            length = choice(NOTE_LENGTH)
+            length = choice(self.settings.NOTE_LENGTH)
             if length < note.length:
                 end = note.end_time
                 note.length -= length
@@ -179,25 +183,23 @@ class GAForRhythm(TrackGABase):
                 track.note.insert(idx + 1, new_note)
                 return
 
-    @staticmethod
-    def _mutate_3(track: Track):
+    def _mutate_3(self, track: Track):
         # merge two notes into one note
         idx = randint(0, len(track.note) - 3)
         note = track.note[idx]
-        if track.note[idx + 1].start_time % BAR_LENGTH == 0:
+        if track.note[idx + 1].start_time % self.settings.BAR_LENGTH == 0:
             # The next note is at the beginning of a bar, we can't merge it
             return
         note.length = track.note[idx + 1].end_time - note.start_time
         track.note.pop(idx + 1)
 
-    @staticmethod
-    def _mutate_4(track: Track):
+    def _mutate_4(self, track: Track):
         # copy a bar and paste it to another bar
         idx = randint(2, track.bar_number - 1)
         bars = track.split_into_bars()
         bars[idx - 2] = deepcopy(bars[idx])
         for note in bars[idx - 2]:
-            note.start_time -= BAR_LENGTH * 2
+            note.start_time -= self.settings.BAR_LENGTH * 2
         track.join_bars(bars)
 
     def run(self, generation):

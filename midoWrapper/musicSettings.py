@@ -1,23 +1,45 @@
-BPM = 120  # Beats per minute
-VELOCITY = 64  # MIDI note velocity
-TICK_PER_BEAT = 480  # Tick per beat
+from .musicType import *
 
-# The rhythm of the generated music
-NUMERATOR = 4
-DENOMINATOR = 4  # 4/4
 
-# The range of notes to be generated
-NOTE_MIN = 60  # C4
-NOTE_MAX = 84  # C6
+class MusicSettings:
+    def __init__(self):
+        self.KEY: Key_T = "C"
+        self.BPM = 120  # Beats per minute
+        self.VELOCITY = 64  # MIDI note velocity
 
-# Note lengths
-BAR_LENGTH = NUMERATOR * TICK_PER_BEAT
+        # The rhythm of the generated music
+        self.TICK_PER_BEAT = 480  # Tick per beat
+        self.NUMERATOR = 4
+        self.DENOMINATOR = 4  # 4/4
 
-QUARTER = BAR_LENGTH // DENOMINATOR
-WHOLE = BAR_LENGTH
-HALF = QUARTER * 2
-EIGHTH = QUARTER // 2
-SIXTEENTH = QUARTER // 4
-NOTE_LENGTH = [HALF, QUARTER, EIGHTH]
+    @property
+    def BAR_LENGTH(self):
+        return self.NUMERATOR * self.TICK_PER_BEAT
 
-NOTE_UNIT = min(NOTE_LENGTH)
+    @property
+    def QUARTER(self):
+        return self.BAR_LENGTH // self.DENOMINATOR
+
+    @property
+    def WHOLE(self):
+        return self.BAR_LENGTH
+
+    @property
+    def HALF(self):
+        return self.QUARTER * 2
+
+    @property
+    def EIGHTH(self):
+        return self.QUARTER // 2
+
+    @property
+    def SIXTEENTH(self):
+        return self.QUARTER // 4
+
+    @property
+    def NOTE_LENGTH(self):
+        return [self.HALF, self.QUARTER, self.EIGHTH]
+
+    @property
+    def NOTE_UNIT(self):
+        return min(self.NOTE_LENGTH)

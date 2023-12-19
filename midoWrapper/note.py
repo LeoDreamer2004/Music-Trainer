@@ -1,7 +1,5 @@
-from .musicSettings import *
-from typing import Literal, Union
 from random import randint
-
+from .musicType import *
 
 note_name_dict = {
     "C": 0,
@@ -14,7 +12,6 @@ note_name_dict = {
     "E#": 5,
     "Eb": 3,
     "F": 5,
-    "F#": 6,
     "Fb": 4,
     "G": 7,
     "G#": 8,
@@ -27,24 +24,18 @@ note_name_dict = {
     "Bb": 10,
 }
 
-Key_Major_T = Literal[
-    "C", "Db", "D", "Eb", "E", "F", "F#", "E", "G", "Ab", "A", "Bb", "B"
-]
-Key_Minor_T = Literal[
-    "Cm", "C#m", "Dm", "D#m", "Ebm", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "Bbm", "Bm"
-]
-Key_T = Union[Key_Major_T, Key_Minor_T]
-Pitch_T = int
 
 # offset of the notes in the major mode and minor mode
 major_offset = (0, 2, 4, 5, 7, 9, 11)
 minor_offset = (0, 2, 3, 5, 7, 8, 10)
 
+# The range of notes to be generated
+NOTE_MIN = 60  # C4
+NOTE_MAX = 84  # C6
+
 
 class Note:
-    def __init__(
-        self, pitch: Pitch_T, length: int, start_time: int, velocity: int = VELOCITY
-    ):
+    def __init__(self, pitch: Pitch_T, length: int, start_time: int, velocity: int):
         # Here the "time" is "tick" in mido actually
         self.pitch = pitch
         self.length = length

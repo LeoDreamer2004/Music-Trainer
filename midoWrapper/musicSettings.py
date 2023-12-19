@@ -6,6 +6,7 @@ class MusicSettings:
         self.key: Key_T = "C"
         self.bpm = 120  # Beats per minute
         self.velocity = 64  # MIDI note velocity
+        self.bar_number = 8
 
         # The rhythm of the generated music
         self.tick_per_beat = 480  # Tick per beat

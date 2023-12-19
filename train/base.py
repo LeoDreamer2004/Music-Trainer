@@ -24,7 +24,7 @@ class TrackParameterBase(metaclass=ABCMeta):
     """Base class for calculating parameters of the tracks"""
 
     def __init__(self, track: Track):
-        self.settings = track.settings
+        self.settings = track.sts
         self.track = track
         self.bar_number = track.bar_number
         self.bars = self.track.split_into_bars()
@@ -43,7 +43,7 @@ class TrackGABase(metaclass=ABCMeta):
         self.mutation_rate = mutation_rate
         self.fitness = [0] * len(population)
         self.best_index, self.second_index = 0, 0
-        self.settings = population[0].settings
+        self.settings = population[0].sts
 
     def update_fitness(self):
         for idx, track in enumerate(self.population):

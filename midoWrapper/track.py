@@ -20,7 +20,7 @@ class Track:
         instrument: int = 0,
     ):
         self.instrument = instrument
-        self.settings = settings
+        self.sts = settings
         self.note: List[Note] = []
 
     def __str__(self):  # used for debug
@@ -42,14 +42,14 @@ class Track:
     def from_mido_track(self, track: mido.MidiTrack) -> "Track":
         """Generate a track from a mido track.
         Available for chords."""
-        ga_track = Track(self.settings)
+        ga_track = Track(self.sts)
         time = 0
         note_dict = {}  # pitch -> (start_time, velocity)
         for msg in track:
             if msg.type == "program_change":
                 ga_track.instrument = msg.program
             elif msg.type == "key_signature":
-                ga_track.settings.key = msg.key
+                ga_track.sts.key = msg.key
             elif msg.type == "note_on":
                 time += msg.time
                 note_dict[msg.note] = (time, msg.velocity)
@@ -102,42 +102,33 @@ class Track:
                 track.note[-1].pitch = pitch
                 return track
 
-    def generate_random_track(self, bar_number: int):
+    def generate_random_track(self):
         """Generate a random track with the given bar number"""
-        for i in range(bar_number - 1):
-            length = self.settings.bar_length
+        velocity = self.sts.velocity
+
+        for i in range(self.sts.bar_number - 1):
+            length = self.sts.bar_length
             while length > 0:
-                note_length = choice(self.settings.note_length)
+                note_length = choice(self.sts.note_length)
                 if note_length <= length:
-                    note = Note(
-                        0,
-                        note_length,
-                        (i + 1) * self.settings.bar_length - length,
-                        self.settings.velocity,
-                    )
+                    start_time = (i + 1) * self.sts.bar_length - length
+                    note = Note(0, note_length, start_time, velocity)
                     length -= note_length
                     self.note.append(note)
 
         # For the last bar, we want to make sure that the last note is a half note
-        length = self.settings.bar_length
-        while length > self.settings.half:
-            note_length = choice(self.settings.note_length)
-            if note_length <= length - self.settings.half:
-                note = Note(
-                    0,
-                    note_length,
-                    bar_number * self.settings.bar_length - length,
-                    self.settings.velocity,
-                )
+        length = self.sts.bar_length
+        while length > self.sts.half:
+            note_length = choice(self.sts.note_length)
+            if note_length <= length - self.sts.half:
+                start_time = self.sts.bar_number * self.sts.bar_length - length
+                note = Note(0, note_length, start_time, velocity)
                 length -= note_length
                 self.note.append(note)
-        note = Note(
-            0,
-            self.settings.half,
-            bar_number * self.settings.bar_length - self.settings.half,
-            self.settings.velocity,
-        )
+        start_time = self.sts.bar_number * self.sts.bar_length - self.sts.half
+        note = Note(0, self.sts.half, start_time, velocity)
         self.note.append(note)
+
         self.generate_random_pitch_on_rhythm(self)
         return self
 
@@ -145,14 +136,14 @@ class Track:
         """Split the track into bars."""
         bars = [[] for _ in range(self.bar_number)]
         for note in self.note:
-            idx = note.start_time // self.settings.bar_length
+            idx = note.start_time // self.sts.bar_length
 
-            if note.end_time <= (idx + 1) * self.settings.bar_length:
+            if note.end_time <= (idx + 1) * self.sts.bar_length:
                 bars[idx].append(note)
             else:
                 # The note exceeds the bar, split it into two parts
                 note1, note2 = deepcopy(note), deepcopy(note)
-                bar_time = (idx + 1) * self.settings.bar_length
+                bar_time = (idx + 1) * self.sts.bar_length
                 note1.length = bar_time - note.start_time
                 note2.length = note.end_time - bar_time
                 note2.start_time = bar_time
@@ -173,11 +164,11 @@ class Track:
     @property
     def bar_number(self):
         """The number of bars"""
-        return math.ceil(self.full_length / self.settings.whole)
+        return math.ceil(self.full_length / self.sts.whole)
 
     @property
     def key(self):
-        return self.settings.key
+        return self.sts.key
 
     def transpose(self, interval):
         """Transpose the track by the given interval"""

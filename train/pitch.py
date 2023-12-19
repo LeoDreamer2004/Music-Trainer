@@ -8,22 +8,15 @@ from .base import *
 DEBUG = False
 # the weight for mean, standard deviation of intervals
 p1 = 3
-# the weight for bad notes (outside the mode)
-p3 = 5
 # the weight for three notes
-p4 = 2
+p2 = 2
 # the weight for emotion
-p5 = 3
+p3 = 3
 # the weight for echo
-p6 = 1
+p4 = 1
 # the weight for melody line
-p7 = 2
+p5 = 2
 
-# coefficient for similarity
-mean_coeff = np.array([2, 1, 1, 1, 1, 1, 1, 2])
-emotion_coeff = np.array(
-    [1.5, 0.5, 0.8, 1, 1.5, 0.5, 0.8, 2, 1.5, 0.5, 0.8, 1, 1.5, 0.5, 0.8, 3]
-)
 interval_emotion_dict = {
     1: 1,  # unison: tonic, stable & cadence
     2: 4,  # second: supertonic, tension
@@ -34,7 +27,7 @@ interval_emotion_dict = {
     7: 5,  # seventh: lead, strong tension
 }
 # the target value
-pitch_target = 9
+pitch_target = 8.5
 
 # rate of three types of mutation
 mutation_rate_1 = 2
@@ -156,22 +149,39 @@ class GAForPitch(TrackGABase):
     ):
         super().__init__(population, mutation_rate)
         self.ref_param = PitchParameter(reference_track)
+        self.mean_coeff = np.ones(self.bar_number, dtype=float)
+        self.emotion_coeff = np.zeros(self.bar_number * 2, dtype=float)
+        self._update_coeff()
         self.update_fitness()
+
+    def _update_coeff(self):
+        for idx in range(self.bar_number * 2):
+            if idx == self.bar_number * 2 - 1:  # the end of the song
+                self.emotion_coeff[idx] = 3
+            elif idx % 8 == 7:  # the end of a phrase
+                self.emotion_coeff[idx] = 2
+            elif idx % 2 == 0 or idx % 8 == 3:  # strong beats
+                self.emotion_coeff[idx] = 1
+            else:
+                self.emotion_coeff[idx] = 0.5
+        self.mean_coeff[0] = self.mean_coeff[-1] = 2
 
     def get_fitness(self, track: Track) -> float:
         param = PitchParameter(track)
         mean_diff = np.abs(param.means - self.ref_param.means)
-        f1 = p1 * np.exp(-(np.dot(mean_coeff, mean_diff) / self.bar_number))
-        f3 = p4 * param.three_notes / self.bar_number
+        f1 = p1 * np.exp(-(np.sum(mean_diff) / self.bar_number))
+        f2 = p2 * param.three_notes / self.bar_number
         emotion_diff = np.abs(param.emotion - self.ref_param.emotion)
-        f4 = p5 * np.exp(-(np.dot(emotion_coeff, emotion_diff) / (self.bar_number * 2)))
-        f5 = p6 * self.bar_number / (param.echo + 1)
-        f6 = p7 * np.corrcoef(param.melody_line, self.ref_param.melody_line)[0, 1]
+        f3 = p3 * np.exp(
+            -(np.dot(self.emotion_coeff, emotion_diff) / (self.bar_number * 2))
+        )
+        f4 = p4 * self.bar_number / (param.echo + 1)
+        f5 = p5 * np.corrcoef(param.melody_line, self.ref_param.melody_line)[0, 1]
 
         if DEBUG and random() < 0.01:
-            print(f"{f1} \t {f3} \t {f4} \t {f5} \t {f6}")
+            print(f"{f1} \t {f2} \t {f3} \t {f4} \t {f5}")
 
-        return f1 + f3 + f4 + f5 + f6
+        return f1 + f2 + f3 + f4 + f5
 
     def crossover(self):
         # No crossover for pitch

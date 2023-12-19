@@ -9,7 +9,7 @@ class Midi:
     """A wrapper for mido.Midifile"""
 
     def __init__(self, settings: MusicSettings = None):
-        self.settings = settings if settings is not None else MusicSettings()
+        self.sts = settings if settings is not None else MusicSettings()
         self.tracks: List[Track] = []
 
     def to_mido_midi(self) -> mido.MidiFile:
@@ -17,18 +17,18 @@ class Midi:
         s = mido.MidiFile()
         meta_track = mido.MidiTrack()
         meta_track.append(
-            mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(self.settings.bpm))
+            mido.MetaMessage("set_tempo", tempo=mido.bpm2tempo(self.sts.bpm))
         )
         meta_track.append(
             mido.MetaMessage(
                 "time_signature",
-                numerator=self.settings.numerator,
-                denominator=self.settings.denominator,
+                numerator=self.sts.numerator,
+                denominator=self.sts.denominator,
             )
         )
-        if self.settings.key is not None:
+        if self.sts.key is not None:
             meta_track.append(
-                mido.MetaMessage("key_signature", key=self.settings.key, time=0)
+                mido.MetaMessage("key_signature", key=self.sts.key, time=0)
             )
         s.tracks.append(meta_track)
         for track in self.tracks:
@@ -49,7 +49,8 @@ class Midi:
             if not parsed:
                 ga_midi._parse_midi_parameters(track)
                 parsed = True
-            ga_midi.tracks.append(Track(ga_midi.settings).from_mido_track(track))
+            ga_midi.tracks.append(Track(ga_midi.sts).from_mido_track(track))
+        ga_midi.sts.bar_number = max(track.bar_number for track in ga_midi.tracks)
         return ga_midi
 
     def save_midi(self, filename: str):
@@ -69,9 +70,9 @@ class Midi:
     def _parse_midi_parameters(self, track: mido.MidiTrack):
         for msg in track:
             if msg.type == "set_tempo":
-                self.settings.bpm = mido.tempo2bpm(msg.tempo)
+                self.sts.bpm = mido.tempo2bpm(msg.tempo)
             elif msg.type == "time_signature":
-                self.settings.numerator = msg.numerator
-                self.settings.denominator = msg.denominator
+                self.sts.numerator = msg.numerator
+                self.sts.denominator = msg.denominator
             elif msg.type == "key_signature":
-                self.settings.key = msg.key
+                self.sts.key = msg.key

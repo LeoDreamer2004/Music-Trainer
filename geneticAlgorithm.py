@@ -17,30 +17,28 @@ def main():
 
     refmidi = Midi.from_midi(reference_file)
     ref_track, left_hand = refmidi.tracks
-    bar_number = ref_track.bar_number
     population = [
-        Track(ref_track.settings).generate_random_track(bar_number)
-        for _ in range(population_size)
+        Track(ref_track.sts).generate_random_track() for _ in range(population_size)
     ]
     ga_rhythm = GAForRhythm(population, mutation_rate)
     rhythm_track = ga_rhythm.run(iteration_num)
 
     # Use the rhythm of the track forever
     population_with_rhythm = [
-        Track(ref_track.settings).generate_random_pitch_on_rhythm(rhythm_track)
+        Track(ref_track.sts).generate_random_pitch_on_rhythm(rhythm_track)
         for _ in range(population_size)
     ]
     ga_pitch = GAForPitch(ref_track, population_with_rhythm, mutation_rate)
     result = ga_pitch.run(iteration_num)
 
-    s = Midi(ref_track.settings)
-    s.settings.bpm = 120
+    s = Midi(ref_track.sts)
+    s.sts.bpm = 120
     s.tracks.append(result)
 
     # accompaniment (stolen from reference)
     if with_accompaniment:
         for note in left_hand.note:
-            note.velocity = ref_track.settings.velocity
+            note.velocity = ref_track.sts.velocity
         s.tracks.append(left_hand)
 
     s.save_midi(output_file)

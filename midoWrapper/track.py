@@ -27,8 +27,9 @@ class Track:
         bars = self.split_into_bars()
         msg = ""
         for idx, bar in enumerate(bars):
-            msg += f"\n-------------------  Bar {idx + 1}\n"
+            msg += f"-------------------  Bar {idx + 1}\n"
             msg += "\n".join(str(note) for note in bar)
+            msg += "\n"
         return msg
 
     def brief_info(self):

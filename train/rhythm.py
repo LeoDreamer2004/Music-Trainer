@@ -98,10 +98,8 @@ class RhythmParameter(TrackParameterBase):
 
 
 class GAForRhythm(TrackGABase):
-    def __init__(
-        self, population: List[Track], mutation_rate: float, buffer_time: float = 0.0
-    ):
-        super().__init__(population, mutation_rate, buffer_time)
+    def __init__(self, population: List[Track], mutation_rate: float):
+        super().__init__(population, mutation_rate)
         self.update_fitness()
 
     @staticmethod
@@ -205,19 +203,19 @@ class GAForRhythm(TrackGABase):
         track.join_bars(bars)
 
     def run(self, generation):
-        print("Start training for rhythm...")
+        print("--------- Start Rhythm Training ---------")
+        succeed = False
         for i in range(generation):
             if i % 30 == 0:
-                print(f"Rhythm generation {i}:", end=" ")
-                self.show_info()
-
+                print(f"Rhythm generation {i}: " + self.train_info())
             self.epoch()
-
             if self.fitness[self.best_index] > rhythm_target:
                 print(f"[!] Target reached at generation {i}")
-                print(f"final fitness for rhythm: {self.fitness[self.best_index]}")
-                return self.population[self.best_index]
+                succeed = True
+                break
+        if not succeed:
+            print(f"[!] Target not reached after {generation} generations")
 
-        print(f"[!] Target not reached after {generation} generations")
-        print(f"final fitness for rhythm: {self.fitness[self.best_index]}")
+        print(f"Final fitness for rhythm: {self.fitness[self.best_index]}")
+        print("--------- Finish Rhythm Training ---------")
         return self.population[self.best_index]

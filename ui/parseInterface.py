@@ -11,14 +11,13 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont
 from qfluentwidgets import (
     PushButton,
+    PrimaryPushButton,
     InfoBar,
-    FluentIcon,
-    SmoothScrollArea,
     MessageBox,
     BodyLabel,
 )
 
-from midoWrapper import *
+from midoWrapper import Midi
 
 
 class ParseInterface(QWidget):
@@ -44,17 +43,18 @@ class ParseInterface(QWidget):
         # button
         self.fileWidget = QWidget()
         self.fileLayout = QHBoxLayout(self.fileWidget)
+        self.fileLayout.setContentsMargins(0, 0, 0, 0)
         self.fileWidget.setLayout(self.fileLayout)
         self.fileBtn = PushButton("选择文件")
-        self.fileBtn.setFixedWidth(200)
+        self.fileBtn.setFixedWidth(150)
         self.clearBtn = PushButton("清空文件")
-        self.clearBtn.setFixedWidth(200)
+        self.clearBtn.setFixedWidth(150)
         self.fileLayout.addWidget(self.fileBtn)
         self.fileLayout.addWidget(self.clearBtn)
         self.fileLayout.addStretch(1)
 
-        self.startBtn = PushButton("开始解析", self)
-        self.startBtn.setFixedWidth(200)
+        self.startBtn = PrimaryPushButton("开始解析", self)
+        self.startBtn.setFixedWidth(150)
 
         # output
         self.output = QPlainTextEdit()
@@ -63,6 +63,7 @@ class ParseInterface(QWidget):
         self.output.setFont(QFont("Consolas", 10))
 
         self.form.addWidget(self.fileWidget)
+        self.form.addSpacing(10)
         self.form.addWidget(self.fileLabel)
         self.form.addSpacing(20)
         self.form.addWidget(self.startBtn)
@@ -92,11 +93,11 @@ class ParseInterface(QWidget):
 
     def startParse(self):
         if self.filename is None:
-            InfoBar.error("未选择文件", "请先选择midi文件！", duration=2000, parent=self)
+            InfoBar.error("未选择文件", "请先选择midi文件！", duration=1500, parent=self)
             return
         try:
             self._parseMidi()
-            InfoBar.success("解析完成！", "请查看你的midi文件夹", duration=2000, parent=self)
+            InfoBar.success("解析完成！", "请查看你的midi文件夹", duration=1500, parent=self)
         except Exception as e:
             warning = "请检查midi文件是否符合规范\n此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
             warning += f"错误信息: {e}"
@@ -121,7 +122,7 @@ class ParseInterface(QWidget):
             output += "instrument: " + str(track.instrument) + "\n"
             output += "========================\n\n"
             output += str(track)
-            output += "\n\n\n"
+            output += "\n"
 
         for line in output.split("\n")[len(header.split("\n")) + 1 :]:
             if line.startswith(("Track", "=========")):

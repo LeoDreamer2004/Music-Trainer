@@ -149,9 +149,8 @@ class GAForPitch(TrackGABase):
         reference_track: Track,
         population: List[Track],
         mutation_rate: float,
-        buffer_time: float = 0,
     ):
-        super().__init__(population, mutation_rate, buffer_time)
+        super().__init__(population, mutation_rate)
         self.ref_param = PitchParameter(reference_track)
         self.mean_coeff = np.ones(self.bar_number, dtype=float)
         self.emotion_coeff = np.zeros(self.bar_number * 2, dtype=float)
@@ -243,21 +242,23 @@ class GAForPitch(TrackGABase):
     def run(self, generation: int):
         best_track = deepcopy(self.population[self.best_index])
         best_fitness = 0
+
+        print("--------- Start Pitch Training ---------")
+        succeed = False
         for i in range(generation):
             if i % 30 == 0:
-                print(f"Pitch generation {i}:", end=" ")
-                self.show_info()
-
+                print(f"Pitch generation {i}: " + self.train_info())
             self.epoch()
-
             if self.fitness[self.best_index] > pitch_target:
                 print(f"[!] Target reached at generation {i}")
-                print(f"final fitness for pitch: {self.fitness[self.best_index]}")
-                return self.population[self.best_index]
+                succeed = True
+                break
             elif self.fitness[self.best_index] > best_fitness:
                 best_fitness = self.fitness[self.best_index]
                 best_track = deepcopy(self.population[self.best_index])
+        if not succeed:
+            print(f"[!] Target not reached after {generation} generations")
 
-        print(f"[!] Target not reached after {generation} generations")
-        print(f"final fitness for pitch: {best_fitness}")
+        print(f"Final fitness for pitch: {best_fitness}")
+        print("--------- Finish Pitch Training ---------")
         return best_track

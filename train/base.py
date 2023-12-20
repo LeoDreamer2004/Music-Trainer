@@ -1,6 +1,5 @@
 import sys
 from abc import ABCMeta, abstractmethod
-from time import sleep
 from random import random
 from typing import List
 from midoWrapper import *
@@ -37,16 +36,13 @@ class TrackParameterBase(metaclass=ABCMeta):
 class TrackGABase(metaclass=ABCMeta):
     """Base class for GA"""
 
-    def __init__(
-        self, population: List[Track], mutation_rate: float, buffer_time: float
-    ):
+    def __init__(self, population: List[Track], mutation_rate: float):
         self.population = population
         self.bar_number = population[0].bar_number
         self.mutation_rate = mutation_rate
         self.fitness = [0] * len(population)
         self.best_index, self.second_index = 0, 0
         self.settings = population[0].sts
-        self.buffer_time = buffer_time
 
     def update_fitness(self):
         for idx, track in enumerate(self.population):
@@ -72,11 +68,10 @@ class TrackGABase(metaclass=ABCMeta):
     def mutate(self):
         raise NotImplementedError
 
-    def show_info(self):
-        print("Now the best fitness is", self.fitness[self.best_index])
+    def train_info(self):
+        return "Now the best fitness is " + str(self.fitness[self.best_index])
 
     def epoch(self):
-        sleep(self.buffer_time)  # wait for the main thread
         self.crossover()
         self.mutate()
         self.update_fitness()

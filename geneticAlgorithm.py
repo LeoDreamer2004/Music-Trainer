@@ -6,13 +6,17 @@ reference_file = "midi/reference.mid"
 output_file = "midi/result.mid"
 with_accompaniment = True
 
+mutation_rate = 0.8
+iteration_num = 1000
+population_size = 20
+
 
 def main():
     t_start = time()
 
     refmidi = Midi.from_midi(reference_file)
     ref_track, left_hand = refmidi.tracks
-    result = train(ref_track)
+    result = train(ref_track, population_size, mutation_rate, iteration_num)
 
     s = Midi(ref_track.sts)
     s.sts.bpm = 120

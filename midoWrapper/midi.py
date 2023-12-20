@@ -12,6 +12,13 @@ class Midi:
         self.sts = settings if settings is not None else MusicSettings()
         self.tracks: List[Track] = []
 
+    def brief_info(self):
+        msg = f"Key: {self.sts.key}\n"
+        msg += f"Rhythm: {self.sts.numerator}/{self.sts.denominator}\n"
+        msg += f"BPM: {self.sts.bpm}\n"
+        msg += f"Bar: {self.sts.bar_number}\n"
+        return msg
+
     def to_mido_midi(self) -> mido.MidiFile:
         """Convert to mido.MidiFile"""
         s = mido.MidiFile()

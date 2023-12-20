@@ -19,12 +19,12 @@ def generate_random_midi_test():
     # one is the original track, the other is the retrograde track.
 
 
-def read_midi_test(filename='mid/test.mid'):
-    midi = Midi.from_midi(filename)
+def read_midi_test():
+    midi = Midi.from_midi("mid/test.mid")
     right_hand, left_hand = midi.tracks
-    right_hand.print_brief_info()
+    print(right_hand.brief_info())
     print("----------------")
-    left_hand.print_brief_info()
+    print(left_hand.brief_info())
     # For more information, use print(track) to see the detailed notes.
     # print(left_hand)
 

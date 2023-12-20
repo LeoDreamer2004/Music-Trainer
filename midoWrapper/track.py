@@ -24,20 +24,20 @@ class Track:
         self.note: List[Note] = []
 
     def __str__(self):  # used for debug
-        meta_msg = f"Key: {self.key}\nInstrument: {self.instrument}\n"
         bars = self.split_into_bars()
-        note_msg = ""
+        msg = ""
         for idx, bar in enumerate(bars):
-            note_msg += f"\n-------------------  Bar {idx + 1}\n"
-            note_msg += "\n".join(str(note) for note in bar)
-        return meta_msg + note_msg
+            msg += f"\n-------------------  Bar {idx + 1}\n"
+            msg += "\n".join(str(note) for note in bar)
+        return msg
 
-    def print_brief_info(self):
+    def brief_info(self):
         """Brief information of the track."""
-        print(f"Key: {self.key}")
-        print(f"Instrument: {self.instrument}")
-        print(f"Length: {self.full_length}")
-        print(f"Bar: {self.bar_number}")
+        msg = f"Key: {self.key}\n"
+        msg += f"Instrument: {self.instrument}\n"
+        msg += f"Length: {self.full_length}\n"
+        msg += f"Bar: {self.bar_number}\n"
+        return msg
 
     def from_mido_track(self, track: mido.MidiTrack) -> "Track":
         """Generate a track from a mido track.

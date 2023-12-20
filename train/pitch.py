@@ -145,9 +145,13 @@ class PitchParameter(TrackParameterBase):
 
 class GAForPitch(TrackGABase):
     def __init__(
-        self, reference_track: Track, population: List[Track], mutation_rate: float
+        self,
+        reference_track: Track,
+        population: List[Track],
+        mutation_rate: float,
+        buffer_time: float = 0,
     ):
-        super().__init__(population, mutation_rate)
+        super().__init__(population, mutation_rate, buffer_time)
         self.ref_param = PitchParameter(reference_track)
         self.mean_coeff = np.ones(self.bar_number, dtype=float)
         self.emotion_coeff = np.zeros(self.bar_number * 2, dtype=float)
@@ -243,7 +247,9 @@ class GAForPitch(TrackGABase):
             if i % 30 == 0:
                 print(f"Pitch generation {i}:", end=" ")
                 self.show_info()
+
             self.epoch()
+
             if self.fitness[self.best_index] > pitch_target:
                 print(f"[!] Target reached at generation {i}")
                 print(f"final fitness for pitch: {self.fitness[self.best_index]}")

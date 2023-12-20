@@ -1,2 +1,3 @@
 mido
 numpy
+pyqt5

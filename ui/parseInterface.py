@@ -124,11 +124,11 @@ class ParseInterface(QWidget):
             output += "\n\n\n"
 
         for line in output.split("\n")[len(header.split("\n")) + 1 :]:
-            if line[:5] in ("Track", "====="):
+            if line.startswith(("Track", "=========")):
                 self.output.appendHtml(f"<font color=red><b>{line}</b></font>")
-            elif line[:10] == "instrument":
+            elif line.startswith("instrument"):
                 self.output.appendHtml(f"<font color=red>{line}</font>")
-            elif line[:5] == "-----":
+            elif line.startswith("-----"):
                 self.output.appendHtml(f"<font color=blue><b>{line}</b></font>")
             else:
                 self.output.appendPlainText(line)

@@ -12,7 +12,7 @@ class SingletonMeta(type):
 
 
 class Cache(metaclass=SingletonMeta):
-    DIR = os.getcwd() + "\\ui\\cache"
+    DIR = "rsc/cache"
     NAME = "__ui_cache__.pkl"
     PATH = os.path.join(DIR, NAME)
 

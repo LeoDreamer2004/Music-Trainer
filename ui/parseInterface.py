@@ -15,6 +15,7 @@ from qfluentwidgets import (
     MessageBox,
     BodyLabel,
     PlainTextEdit,
+    CardWidget,
 )
 
 from midoWrapper import Midi
@@ -43,10 +44,8 @@ class ParseInterface(QWidget):
         self.fileLabel = BodyLabel("未选择", self)
 
         # button
-        self.fileWidget = QWidget()
-        self.fileLayout = QHBoxLayout(self.fileWidget)
+        self.fileLayout = QHBoxLayout()
         self.fileLayout.setContentsMargins(0, 0, 0, 0)
-        self.fileWidget.setLayout(self.fileLayout)
         self.fileBtn = PushButton("选择midi")
         self.fileBtn.setFixedWidth(150)
         self.clearBtn = PushButton("清空midi")
@@ -67,11 +66,18 @@ class ParseInterface(QWidget):
         self.output.setLineWrapMode(PlainTextEdit.NoWrap)
         self.output.setFont(QFont("Consolas", 10))
 
-        self.form.addWidget(self.fileWidget)
-        self.form.addSpacing(10)
-        self.form.addWidget(self.fileLabel)
-        self.form.addSpacing(20)
-        self.form.addWidget(self.startBtn)
+        # card
+        self.card = CardWidget(self)
+        self.cardVbox = QVBoxLayout()
+        self.cardVbox.setContentsMargins(25, 20, 25, 20)
+        self.card.setLayout(self.cardVbox)
+        self.cardVbox.addLayout(self.fileLayout)
+        self.cardVbox.addSpacing(10)
+        self.cardVbox.addWidget(self.fileLabel)
+        self.cardVbox.addSpacing(20)
+        self.cardVbox.addWidget(self.startBtn)
+
+        self.form.addWidget(self.card)
         self.form.addSpacing(20)
         self.form.addWidget(self.output)
         self.setLayout(self.form)
@@ -110,7 +116,7 @@ class ParseInterface(QWidget):
 
     def startParse(self):
         if self.filename is None:
-            InfoBar.error("未选择文件", "请先选择midi文件！", duration=1500, parent=self)
+            InfoBar.error("未选择文件", "请先选择midi文件！", duration=3000, parent=self)
             return
 
         cache = Cache.load()
@@ -119,7 +125,7 @@ class ParseInterface(QWidget):
 
         try:
             self._parseMidi()
-            InfoBar.success("解析完成！", "请查看你的midi文件夹", duration=1500, parent=self)
+            InfoBar.success("解析完成！", "请查看你的midi文件夹", duration=3000, parent=self)
         except Exception as e:
             warning = "请检查midi文件是否符合规范\n此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
             warning += f"错误信息: {e}"

@@ -23,6 +23,7 @@ from qfluentwidgets import (
     PlainTextEdit,
     SpinBox,
     CompactSpinBox,
+    CardWidget,
     DoubleSpinBox,
     CompactDoubleSpinBox,
     SwitchButton,
@@ -55,10 +56,8 @@ class TrainInterface(QWidget):
         self.fileLabel = BodyLabel(self)
 
         # button
-        self.fileWidget = QWidget()
-        self.fileLayout = QHBoxLayout(self.fileWidget)
+        self.fileLayout = QHBoxLayout()
         self.fileLayout.setContentsMargins(0, 0, 0, 0)
-        self.fileWidget.setLayout(self.fileLayout)
         self.fileBtn = PushButton("选择参考midi")
         self.fileBtn.setFixedWidth(150)
         self.clearBtn = PushButton("清空midi")
@@ -70,10 +69,8 @@ class TrainInterface(QWidget):
         self.fileLayout.addWidget(self.refreshBtn)
         self.fileLayout.addStretch(1)
 
-        self.trainWidget = QWidget()
-        self.trainLayout = QHBoxLayout(self.trainWidget)
+        self.trainLayout = QHBoxLayout()
         self.trainLayout.setContentsMargins(0, 0, 0, 0)
-        self.trainWidget.setLayout(self.trainLayout)
         self.startBtn = PrimaryPushButton("开始训练")
         self.startBtn.setFixedWidth(150)
         self.paramBtn = PushButton("参数设置")
@@ -92,11 +89,18 @@ class TrainInterface(QWidget):
         self.output.setLineWrapMode(PlainTextEdit.NoWrap)
         self.output.setFont(QFont("Consolas", 10))
 
-        self.form.addWidget(self.fileWidget)
-        self.form.addSpacing(10)
-        self.form.addWidget(self.fileLabel)
-        self.form.addSpacing(20)
-        self.form.addWidget(self.trainWidget)
+        # card
+        self.card = CardWidget(self)
+        self.cardVbox = QVBoxLayout()
+        self.cardVbox.setContentsMargins(25, 20, 25, 20)
+        self.card.setLayout(self.cardVbox)
+        self.cardVbox.addLayout(self.fileLayout)
+        self.cardVbox.addSpacing(10)
+        self.cardVbox.addWidget(self.fileLabel)
+        self.cardVbox.addSpacing(20)
+        self.cardVbox.addLayout(self.trainLayout)
+
+        self.form.addWidget(self.card)
         self.form.addSpacing(20)
         self.form.addWidget(self.output)
         self.setLayout(self.form)

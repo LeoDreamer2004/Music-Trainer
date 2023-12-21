@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QTextEdit,
     QFileDialog,
     QPlainTextEdit,
 )
@@ -13,6 +14,7 @@ from qfluentwidgets import (
     PushButton,
     InfoBar,
     MessageBox,
+    TextEdit,
     BodyLabel,
     StrongBodyLabel,
     CardWidget,
@@ -39,15 +41,45 @@ class InfoInterface(SingleDirectionScrollArea):
         self.mainLayout.setAlignment(Qt.AlignTop)
         self.mainLayout.setContentsMargins(16, 20, 16, 20)
 
+        self.usageCard = UsageCard(self)
         self.authorCard = SoftwareCard(self)
         self.licenseCard = LicenseCard(self)
 
+        self.mainLayout.addWidget(self.usageCard)
         self.mainLayout.addWidget(self.authorCard)
         self.mainLayout.addWidget(self.licenseCard)
         self.setWidget(self.view)
 
         self.setStyleSheet("QScrollArea {border: none; background:transparent}")
         self.view.setStyleSheet("QWidget {background:transparent}")
+
+
+class UsageCard(HeaderCardWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.initUi()
+
+    def initUi(self):
+        self.setTitle("使用说明")
+
+        self.usageText = QTextEdit()
+        self.usageText.setFixedHeight(100)
+        self.usageText.setFont(QFont("Microsoft YaHei", 10))
+        self.usageText.setContentsMargins(0, 0, 0, 0)
+        self.usageText.setStyleSheet("QTextEdit {border: none}")
+        self.usageText.setReadOnly(True)
+        self.usageText.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.usageText.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        usage = """
+        本程序是一个基于遗传算法的音乐生成器，可以生成一段音乐的 midi 文件。
+        训练过程基于一个参考 midi 文件，通过遗传算法不断迭代，生成音乐。<br />
+        <b>参考 midi 文件必须是双音轨的，同时尽量不要出现转调、变速。</b>
+        输入当中包含和弦可以正常兼容，但是训练的音乐不会包含和弦。<br />
+        对于参考 midi 文件，由于库的限制，请在导出 midi 后使用 midiEditor 打开并保存一次。
+        """
+        self.usageText.setHtml(usage)
+        self.viewLayout.addWidget(self.usageText)
 
 
 class SoftwareCard(HeaderCardWidget):
@@ -58,9 +90,8 @@ class SoftwareCard(HeaderCardWidget):
 
     def initUi(self):
         self.setTitle("关于")
-        # self.setFixedWidth(650)
 
-        self.authorLabel = StrongBodyLabel("Github: LeoDreamer2004, crlcrl1", self)
+        self.authorLabel = StrongBodyLabel("作者Github: LeoDreamer2004, crlcrl1", self)
         self.authorLabel.setFixedHeight(30)
         self.githubIcon = IconWidget(FluentIcon.GITHUB, self)
         self.githubIcon.setFixedSize(30, 30)
@@ -113,8 +144,5 @@ class LicenseCard(HeaderCardWidget):
 
     def initUi(self):
         self.setTitle("法律与版权许可")
-        # self.setFixedWidth(650)
-
         self.authorLabel = BodyLabel("真的有人会在意这种小程序的许可吗？")
-
         self.viewLayout.addWidget(self.authorLabel)

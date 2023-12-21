@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QFileDialog,
-    QPlainTextEdit,
 )
 from PyQt5.QtGui import QFont
 from qfluentwidgets import (
@@ -15,9 +14,11 @@ from qfluentwidgets import (
     InfoBar,
     MessageBox,
     BodyLabel,
+    PlainTextEdit,
 )
 
 from midoWrapper import Midi
+from .cache import Cache
 
 
 class ParseInterface(QWidget):
@@ -29,6 +30,7 @@ class ParseInterface(QWidget):
         self.filename = None
         self.initUi()
         self.connectSignalToSlot()
+        self.initParameters()
 
     def initUi(self):
         # layout
@@ -57,9 +59,9 @@ class ParseInterface(QWidget):
         self.startBtn.setFixedWidth(150)
 
         # output
-        self.output = QPlainTextEdit()
+        self.output = PlainTextEdit()
         self.output.setReadOnly(True)
-        self.output.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.output.setLineWrapMode(PlainTextEdit.NoWrap)
         self.output.setFont(QFont("Consolas", 10))
 
         self.form.addWidget(self.fileWidget)
@@ -70,6 +72,14 @@ class ParseInterface(QWidget):
         self.form.addSpacing(20)
         self.form.addWidget(self.output)
         self.setLayout(self.form)
+
+    def initParameters(self):
+        cache = Cache.load()
+        self.filename = cache.files["parseMidi"]
+        if self.filename is not None:
+            self.fileLabel.setText(self.filename)
+        else:
+            self.fileLabel.setText("未选择")
 
     def connectSignalToSlot(self):
         self.fileBtn.clicked.connect(self.fileDialog)
@@ -85,7 +95,7 @@ class ParseInterface(QWidget):
             if files == []:
                 return
             self.filename = files[0]
-            self.fileLabel.setText(f"选择midi: {self.filename}")
+            self.fileLabel.setText(self.filename)
 
     def clearFile(self):
         self.filename = None
@@ -95,6 +105,11 @@ class ParseInterface(QWidget):
         if self.filename is None:
             InfoBar.error("未选择文件", "请先选择midi文件！", duration=1500, parent=self)
             return
+
+        cache = Cache.load()
+        cache.files["parseMidi"] = self.filename
+        cache.save()
+
         try:
             self._parseMidi()
             InfoBar.success("解析完成！", "请查看你的midi文件夹", duration=1500, parent=self)

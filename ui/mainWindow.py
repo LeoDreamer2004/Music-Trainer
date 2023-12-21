@@ -61,6 +61,7 @@ class MyTitleBar(TitleBar):
 
     def __init__(self, parent):
         super().__init__(parent)
+        self.setStyleSheet("background-color: #d0d0d0")
         self.setFixedHeight(48)
         self.hBoxLayout.removeWidget(self.minBtn)
         self.hBoxLayout.removeWidget(self.maxBtn)

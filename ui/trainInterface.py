@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QFileDialog,
-    QPlainTextEdit,
     QFormLayout,
 )
 from PyQt5.QtGui import QFont
@@ -21,7 +20,7 @@ from qfluentwidgets import (
     MessageBox,
     MessageBoxBase,
     BodyLabel,
-    LineEdit,
+    PlainTextEdit,
     SpinBox,
     CompactSpinBox,
     DoubleSpinBox,
@@ -31,6 +30,7 @@ from qfluentwidgets import (
 
 from midoWrapper import Midi
 from train import train
+from .cache import Cache
 
 
 class TrainInterface(QWidget):
@@ -39,7 +39,7 @@ class TrainInterface(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("trainInterface")
-        self.filename = None
+        self.refName = None
         self.initUi()
         self.connectSignalToSlot()
         self.initParameters()
@@ -52,7 +52,7 @@ class TrainInterface(QWidget):
         self.form.setAlignment(Qt.AlignTop)
 
         # label
-        self.fileLabel = BodyLabel("未选择", self)
+        self.fileLabel = BodyLabel(self)
 
         # button
         self.fileWidget = QWidget()
@@ -75,14 +75,18 @@ class TrainInterface(QWidget):
         self.startBtn.setFixedWidth(150)
         self.paramBtn = PushButton("参数设置")
         self.paramBtn.setFixedWidth(150)
+        self.stopBtn = PushButton("停止训练")
+        self.stopBtn.setFixedWidth(150)
+        self.stopBtn.setVisible(False)
         self.trainLayout.addWidget(self.startBtn)
         self.trainLayout.addWidget(self.paramBtn)
+        self.trainLayout.addWidget(self.stopBtn)
         self.trainLayout.addStretch(1)
 
         # output
-        self.output = QPlainTextEdit()
+        self.output = PlainTextEdit()
         self.output.setReadOnly(True)
-        self.output.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.output.setLineWrapMode(PlainTextEdit.NoWrap)
         self.output.setFont(QFont("Consolas", 10))
 
         self.form.addWidget(self.fileWidget)
@@ -98,13 +102,20 @@ class TrainInterface(QWidget):
         self.fileBtn.clicked.connect(self.fileDialog)
         self.clearBtn.clicked.connect(self.clearFile)
         self.startBtn.clicked.connect(self.startTrain)
+        self.stopBtn.clicked.connect(self.stopTrain)
         self.paramBtn.clicked.connect(self.showParamWindow)
 
     def initParameters(self):
-        self.population = 20
-        self.mutation = 0.8
-        self.iteration = 1000
-        self.withCompany = True
+        cache = Cache.load()
+        self.population = cache.trainPrams["population"]
+        self.mutation = cache.trainPrams["mutation"]
+        self.iteration = cache.trainPrams["iteration"]
+        self.withCompany = cache.trainPrams["withCompany"]
+        self.refName = cache.files["trainReference"]
+        if self.refName is not None:
+            self.fileLabel.setText(self.refName)
+        else:
+            self.fileLabel.setText("未选择")
 
     def fileDialog(self):
         title = "机器作曲训练"
@@ -114,20 +125,34 @@ class TrainInterface(QWidget):
             files = dialog.selectedFiles()
             if files == []:
                 return
-            self.filename = files[0]
-            self.fileLabel.setText(f"参考midi: {self.filename}")
+            self.refName = files[0]
+            self.fileLabel.setText(self.refName)
 
     def clearFile(self):
-        self.filename = None
+        self.refName = None
         self.fileLabel.setText("未选择")
 
     def startTrain(self):
-        if self.filename is None:
-            InfoBar.error("未选择文件", "请先选择参考midi文件！", duration=1500, parent=self)
+        if self.refName is None:
+            InfoBar.error("未选择文件", "请先选择参考midi文件！", duration=3000, parent=self)
             return
+
+        self.startBtn.setEnabled(False)
+        self.stopBtn.setVisible(True)
+        cache = Cache.load()
+        cache.trainPrams["population"] = self.population
+        cache.trainPrams["mutation"] = self.mutation
+        cache.trainPrams["iteration"] = self.iteration
+        cache.trainPrams["withCompany"] = self.withCompany
+        cache.files["trainReference"] = self.refName
+        cache.save()
+
         self.trainThr = TrainConnectionThread(self)
         self.trainThr.start()
         self.trainThr.setPriority(QThread.LowestPriority)
+
+    def stopTrain(self):
+        self.trainThr.stopTrain()
 
     def showParamWindow(self):
         paramWindow = ParameterWindow(self)
@@ -148,15 +173,19 @@ class TrainInterface(QWidget):
             self.output.appendPlainText(buf)
 
     def trainStatus(self, status: int, info: str):
-        if status == "1":
+        if status == "0":
             InfoBar.success(
-                "训练完成", "训练已完成，可在midi/result.mid查看结果", duration=1500, parent=self
+                "训练完成", "训练已完成，可在midi/result.mid查看结果", duration=3000, parent=self
             )
-        elif status == "0":
+        elif status == "1":
             warning = "请检查midi文件是否符合规范或参数是否正确\n此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
             warning += f"错误信息: {info}"
             box = MessageBox("训练失败", warning, parent=self)
             box.exec_()
+        elif status == "2":
+            InfoBar.warning("训练已终止", "训练被用户打断", duration=3000, parent=self)
+        self.startBtn.setEnabled(True)
+        self.stopBtn.setVisible(False)
 
 
 class TrainConnectionThread(QThread):
@@ -172,7 +201,7 @@ class TrainConnectionThread(QThread):
             target=TrainProcess.run,
             args=(
                 self.send,
-                parent.filename,
+                parent.refName,
                 os.path.join(os.path.dirname(os.getcwd()), "midi/result.mid"),
                 parent.population,
                 parent.mutation,
@@ -192,6 +221,11 @@ class TrainConnectionThread(QThread):
                 elif msg.type == "buf":
                     self.outputBuf.emit(msg.value)
 
+    def stopTrain(self):
+        self.trainStatus.emit("2", None)
+        self.process.terminate()
+        self.terminate()
+
 
 class Protocol:
     def __init__(self, msg_type: str, value: str, info: str = None):
@@ -204,12 +238,12 @@ class TrainProcess:
     @staticmethod
     def run(
         connect: PipeConnection,
-        reference_file: str,
-        output_file: str,
-        population_size: int,
-        mutation_rate: float,
-        iteration_num: int,
-        with_accompaniment: bool,
+        referenceFile: str,
+        outputFile: str,
+        population: int,
+        mutation: float,
+        iteration: int,
+        withCompany: bool,
     ):
         orignal = sys.stdout
         sys.stdout = RedirectStdout(connect)
@@ -217,25 +251,25 @@ class TrainProcess:
         try:
             t_start = time()
 
-            refmidi = Midi.from_midi(reference_file)
+            refmidi = Midi.from_midi(referenceFile)
             ref_track, left_hand = refmidi.tracks
-            result = train(ref_track, population_size, mutation_rate, iteration_num)
+            result = train(ref_track, population, mutation, iteration)
 
             s = Midi(ref_track.sts)
             s.sts.bpm = 120
             s.tracks.append(result)
 
             # accompaniment (stolen from reference)
-            if with_accompaniment:
+            if withCompany:
                 for note in left_hand.note:
                     note.velocity = ref_track.sts.velocity
                 s.tracks.append(left_hand)
-                s.save_midi(output_file)
+                s.save_midi(outputFile)
             print(f"Time cost: {time() - t_start}s")
-            connect.send(Protocol("status", "1"))
+            connect.send(Protocol("status", "0"))
 
         except Exception as e:
-            connect.send(Protocol("status", "0", str(e)))
+            connect.send(Protocol("status", "1", str(e)))
 
         finally:
             sys.stdout = orignal

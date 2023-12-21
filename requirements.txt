@@ -1,3 +1,6 @@
 mido
 numpy
-pyqt5
+PyQt5
+PyQt5_Frameless_Window
+PyQt5_sip
+PyQt_Fluent_Widgets

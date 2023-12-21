@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QFormLayout,
 )
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QPalette, QColor
 from qfluentwidgets import (
     PushButton,
     PrimaryPushButton,
@@ -63,8 +63,11 @@ class TrainInterface(QWidget):
         self.fileBtn.setFixedWidth(150)
         self.clearBtn = PushButton("清空midi")
         self.clearBtn.setFixedWidth(150)
+        self.refreshBtn = PushButton("清空控制台")
+        self.refreshBtn.setFixedWidth(150)
         self.fileLayout.addWidget(self.fileBtn)
         self.fileLayout.addWidget(self.clearBtn)
+        self.fileLayout.addWidget(self.refreshBtn)
         self.fileLayout.addStretch(1)
 
         self.trainWidget = QWidget()
@@ -74,9 +77,9 @@ class TrainInterface(QWidget):
         self.startBtn = PrimaryPushButton("开始训练")
         self.startBtn.setFixedWidth(150)
         self.paramBtn = PushButton("参数设置")
-        self.paramBtn.setFixedWidth(150)
         self.stopBtn = PushButton("停止训练")
-        self.stopBtn.setFixedWidth(150)
+        self.paramBtn.setFixedWidth(150)
+
         self.stopBtn.setVisible(False)
         self.trainLayout.addWidget(self.startBtn)
         self.trainLayout.addWidget(self.paramBtn)
@@ -101,6 +104,7 @@ class TrainInterface(QWidget):
     def connectSignalToSlot(self):
         self.fileBtn.clicked.connect(self.fileDialog)
         self.clearBtn.clicked.connect(self.clearFile)
+        self.refreshBtn.clicked.connect(self.clearOutput)
         self.startBtn.clicked.connect(self.startTrain)
         self.stopBtn.clicked.connect(self.stopTrain)
         self.paramBtn.clicked.connect(self.showParamWindow)
@@ -131,6 +135,9 @@ class TrainInterface(QWidget):
     def clearFile(self):
         self.refName = None
         self.fileLabel.setText("未选择")
+
+    def clearOutput(self):
+        self.output.clear()
 
     def startTrain(self):
         if self.refName is None:
@@ -202,7 +209,7 @@ class TrainConnectionThread(QThread):
             args=(
                 self.send,
                 parent.refName,
-                os.path.join(os.path.dirname(os.getcwd()), "midi/result.mid"),
+                os.path.join(os.getcwd(), r"midi\result.mid"),
                 parent.population,
                 parent.mutation,
                 parent.iteration,

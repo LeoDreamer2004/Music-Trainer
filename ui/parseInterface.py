@@ -47,12 +47,15 @@ class ParseInterface(QWidget):
         self.fileLayout = QHBoxLayout(self.fileWidget)
         self.fileLayout.setContentsMargins(0, 0, 0, 0)
         self.fileWidget.setLayout(self.fileLayout)
-        self.fileBtn = PushButton("选择文件")
+        self.fileBtn = PushButton("选择midi")
         self.fileBtn.setFixedWidth(150)
-        self.clearBtn = PushButton("清空文件")
+        self.clearBtn = PushButton("清空midi")
         self.clearBtn.setFixedWidth(150)
+        self.refreshBtn = PushButton("清空控制台")
+        self.refreshBtn.setFixedWidth(150)
         self.fileLayout.addWidget(self.fileBtn)
         self.fileLayout.addWidget(self.clearBtn)
+        self.fileLayout.addWidget(self.refreshBtn)
         self.fileLayout.addStretch(1)
 
         self.startBtn = PrimaryPushButton("开始解析", self)
@@ -84,6 +87,7 @@ class ParseInterface(QWidget):
     def connectSignalToSlot(self):
         self.fileBtn.clicked.connect(self.fileDialog)
         self.clearBtn.clicked.connect(self.clearFile)
+        self.refreshBtn.clicked.connect(self.clearOutput)
         self.startBtn.clicked.connect(self.startParse)
 
     def fileDialog(self):
@@ -100,6 +104,9 @@ class ParseInterface(QWidget):
     def clearFile(self):
         self.filename = None
         self.fileLabel.setText("未选择")
+
+    def clearOutput(self):
+        self.output.clear()
 
     def startParse(self):
         if self.filename is None:
@@ -120,7 +127,7 @@ class ParseInterface(QWidget):
             wrongBox.exec()
 
     def _parseMidi(self):
-        filename = "./midi/parseline.txt"
+        filename = os.getcwd() + "/midi/parse.txt"
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         midi = Midi.from_midi(self.filename)
 

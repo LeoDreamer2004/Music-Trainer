@@ -1,4 +1,5 @@
 import pickle
+import os
 
 
 class SingletonMeta(type):
@@ -11,6 +12,10 @@ class SingletonMeta(type):
 
 
 class Cache(metaclass=SingletonMeta):
+    DIR = os.getcwd() + "\\ui\\cache"
+    NAME = "__ui_cache__.pkl"
+    PATH = os.path.join(DIR, NAME)
+
     def __init__(self):
         self.files = {
             "trainReference": None,
@@ -27,11 +32,13 @@ class Cache(metaclass=SingletonMeta):
     @staticmethod
     def load() -> "Cache":
         try:
-            with open("__ui_cache__.pkl", "rb") as f:
+            os.makedirs(Cache.DIR, exist_ok=True)
+            with open(Cache.PATH, "rb") as f:
                 return pickle.load(f)
         except FileNotFoundError:
             return Cache()
 
     def save(self):
-        with open("__ui_cache__.pkl", "wb") as f:
+        os.makedirs(Cache.DIR, exist_ok=True)
+        with open(Cache.PATH, "wb") as f:
             pickle.dump(self, f)

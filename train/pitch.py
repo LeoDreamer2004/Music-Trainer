@@ -137,6 +137,14 @@ class PitchParameter(TrackParameterBase):
         )
         for note in self.track.note:
             note_size = note.length // self.settings.note_unit
+
+            # debugger for those notes that are too short
+            if note.length < self.settings.note_unit:
+                if note.start_time % self.settings.note_unit == 0:
+                    note_size = 1
+                else:
+                    continue
+
             start_idx = note.start_time // self.settings.note_unit
             # fill the melody line with the pitch of the note
             self.melody_line[start_idx : start_idx + note_size] = note.pitch

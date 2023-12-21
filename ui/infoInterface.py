@@ -1,13 +1,8 @@
-import os
-
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QTextEdit,
-    QFileDialog,
-    QPlainTextEdit,
 )
 from PyQt5.QtGui import QFont, QDesktopServices
 from qfluentwidgets import (
@@ -18,6 +13,8 @@ from qfluentwidgets import (
     BodyLabel,
     StrongBodyLabel,
     CardWidget,
+    PlainTextEdit,
+    HyperlinkLabel,
     PrimaryPushButton,
     FluentIcon,
     IconWidget,
@@ -62,24 +59,31 @@ class UsageCard(HeaderCardWidget):
     def initUi(self):
         self.setTitle("使用说明")
 
-        self.usageText = QTextEdit()
-        self.usageText.setFixedHeight(100)
+        self.usageText = BodyLabel()
         self.usageText.setFont(QFont("Microsoft YaHei", 10))
         self.usageText.setContentsMargins(0, 0, 0, 0)
-        self.usageText.setStyleSheet("QTextEdit {border: none}")
-        self.usageText.setReadOnly(True)
-        self.usageText.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.usageText.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.usageText.setWordWrap(True)
+        usage = (
+            "本程序是一个基于遗传算法的音乐生成器，可以生成一段音乐的 midi 文件。"
+            "训练过程基于一个参考 midi 文件，通过遗传算法不断迭代，生成音乐。<br />"
+            "<b>参考 midi 文件必须是双音轨的，主旋律不可以有和弦。同时尽量不要出现转调、变速。</b><br />"
+            "对于参考 midi 文件，由于库的限制，请在导出 midi 后使用 midiEditor 打开并保存一次。"
+        )
+        self.usageText.setText(usage)
 
-        usage = """
-        本程序是一个基于遗传算法的音乐生成器，可以生成一段音乐的 midi 文件。
-        训练过程基于一个参考 midi 文件，通过遗传算法不断迭代，生成音乐。<br />
-        <b>参考 midi 文件必须是双音轨的，同时尽量不要出现转调、变速。</b>
-        输入当中包含和弦可以正常兼容，但是训练的音乐不会包含和弦。<br />
-        对于参考 midi 文件，由于库的限制，请在导出 midi 后使用 midiEditor 打开并保存一次。
-        """
-        self.usageText.setHtml(usage)
-        self.viewLayout.addWidget(self.usageText)
+        self.linkLabel = HyperlinkLabel(
+            QUrl(
+                "https://github.com/LeoDreamer2004/PKU-MathInMusic-2023/blob/main/report.pdf"
+            ),
+            "点击查看详细信息",
+            self,
+        )
+
+        self.vLayout = QVBoxLayout()
+        self.vLayout.setContentsMargins(0, 0, 0, 0)
+        self.vLayout.addWidget(self.usageText)
+        self.vLayout.addWidget(self.linkLabel)
+        self.viewLayout.addLayout(self.vLayout)
 
 
 class SoftwareCard(HeaderCardWidget):

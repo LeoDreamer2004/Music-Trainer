@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     from PyQt5.QtCore import Qt
     from PyQt5.QtWidgets import QApplication
-    from .ui.mainWindow import MainWindow
+    from ui.mainWindow import MainWindow
 
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough

@@ -66,14 +66,24 @@ class MyTitleBar(TitleBar):
         self.hBoxLayout.removeWidget(self.minBtn)
         self.hBoxLayout.removeWidget(self.maxBtn)
         self.hBoxLayout.removeWidget(self.closeBtn)
+
         # add window icon
         self.iconLabel = QLabel(self)
         self.iconLabel.setFixedSize(18, 18)
-        self.iconLabel.setPixmap(QIcon("rsc/img/icon.png").pixmap(18, 18))
+        self.hBoxLayout.insertSpacing(0, 20)
+        self.hBoxLayout.insertWidget(
+            1, self.iconLabel, 0, Qt.AlignLeft | Qt.AlignVCenter
+        )
+        self.window().windowIconChanged.connect(self.setIcon)
 
         # add title label
         self.titleLabel = BodyLabel(self)
-        self.titleLabel.setText("Music Trainer")
+        self.hBoxLayout.insertWidget(
+            2, self.titleLabel, 0, Qt.AlignLeft | Qt.AlignVCenter
+        )
+        self.hBoxLayout.insertSpacing(2, 10)
+        self.titleLabel.setObjectName("titleLabel")
+        self.window().windowTitleChanged.connect(self.setTitle)
 
         self.vBoxLayout = QVBoxLayout()
         self.buttonLayout = QHBoxLayout()
@@ -85,14 +95,14 @@ class MyTitleBar(TitleBar):
         self.buttonLayout.addWidget(self.closeBtn)
         self.vBoxLayout.addLayout(self.buttonLayout)
         self.vBoxLayout.addStretch(1)
-
-        self.hBoxLayout.setStretch(0, 0)
-        self.hBoxLayout.addSpacing(16)
-        self.hBoxLayout.addWidget(self.iconLabel)
-        self.hBoxLayout.addSpacing(10)
-        self.hBoxLayout.addWidget(self.titleLabel)
-        self.hBoxLayout.addStretch(1)
         self.hBoxLayout.addLayout(self.vBoxLayout, 0)
+
+    def setTitle(self, title):
+        self.titleLabel.setText(title)
+        self.titleLabel.adjustSize()
+
+    def setIcon(self, icon):
+        self.iconLabel.setPixmap(QIcon(icon).pixmap(18, 18))
 
 
 class MainWindow(FramelessWindow):
@@ -100,6 +110,8 @@ class MainWindow(FramelessWindow):
         super().__init__()
         self.resize(800, 600)
         self.setTitleBar(MyTitleBar(self))
+        self.setWindowTitle("Music Trainer")
+        self.setWindowIcon(QIcon("rsc/img/icon.png"))
         self.titleBar.setAttribute(Qt.WA_StyledBackground)
         # self.setQss()
 

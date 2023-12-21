@@ -74,9 +74,9 @@ class TrainInterface(QWidget):
         self.startBtn = PrimaryPushButton("开始训练")
         self.startBtn.setFixedWidth(150)
         self.paramBtn = PushButton("参数设置")
-        self.stopBtn = PushButton("停止训练")
         self.paramBtn.setFixedWidth(150)
-
+        self.stopBtn = PushButton("停止训练")
+        self.stopBtn.setFixedWidth(150)
         self.stopBtn.setVisible(False)
         self.trainLayout.addWidget(self.startBtn)
         self.trainLayout.addWidget(self.paramBtn)
@@ -170,7 +170,7 @@ class TrainInterface(QWidget):
         if paramWindow.exec():
             self.population = paramWindow.populationEdit.value()
             self.mutation = paramWindow.mutationEdit.value()
-            self.iteration = paramWindow.iterationEdit.value() * 100
+            self.iteration = paramWindow.iterationEdit.value()
             self.withCompany = paramWindow.withCompany
 
     def writeBuf(self, buf: str):
@@ -275,8 +275,10 @@ class TrainProcess:
                 for note in left_hand.note:
                     note.velocity = ref_track.sts.velocity
                 s.tracks.append(left_hand)
-                s.save_midi(outputFile)
+
+            s.save_midi(outputFile)
             print(f"Time cost: {time() - t_start}s")
+            print(f"Result saved to {outputFile}")
             connect.send(Protocol("status", "0"))
 
         except Exception as e:
@@ -308,12 +310,19 @@ class ParameterWindow(MessageBoxBase):
         self.populationLabel = BodyLabel("种群数量")
         self.populationEdit = SpinBox()
         self.populationEdit.setValue(parent.population)
+
         self.mutationLabel = BodyLabel("变异率")
         self.mutationEdit = DoubleSpinBox()
+        self.mutationEdit.setRange(0, 1)
+        self.mutationEdit.setSingleStep(0.1)
         self.mutationEdit.setValue(parent.mutation)
-        self.iterationLabel = BodyLabel("迭代次数(*100)")
+
+        self.iterationLabel = BodyLabel("迭代次数")
         self.iterationEdit = SpinBox()
-        self.iterationEdit.setValue(parent.iteration // 100)
+        self.iterationEdit.setRange(1, 10000)
+        self.iterationEdit.setSingleStep(100)
+        self.iterationEdit.setValue(parent.iteration)
+
         self.companyLabel = BodyLabel("伴奏")
         self.companyEdit = SwitchButton()
         self.companyEdit.setChecked(parent.withCompany)

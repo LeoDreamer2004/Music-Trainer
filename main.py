@@ -20,7 +20,7 @@ def module_check():
 
 if __name__ == "__main__":
     module_check()
-
+    import ctypes
     from PyQt5.QtCore import Qt
     from PyQt5.QtWidgets import QApplication
     from ui.mainWindow import MainWindow
@@ -30,6 +30,8 @@ if __name__ == "__main__":
     )
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
 
     app = QApplication(sys.argv)
     w = MainWindow()

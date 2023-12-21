@@ -21,7 +21,6 @@ class Cache(metaclass=SingletonMeta):
             "trainReference": None,
             "parseMidi": None,
         }
-
         self.trainPrams = {
             "population": 10,
             "mutation": 0.8,
@@ -31,14 +30,23 @@ class Cache(metaclass=SingletonMeta):
 
     @staticmethod
     def load() -> "Cache":
-        try:
-            os.makedirs(Cache.DIR, exist_ok=True)
-            with open(Cache.PATH, "rb") as f:
-                return pickle.load(f)
-        except FileNotFoundError:
+        if not os.path.exists(Cache.PATH):
             return Cache()
+
+        with open(Cache.PATH, "rb") as f:
+            cache: Cache = pickle.load(f)
+            if cache._check_files():
+                return cache
+            else:
+                return Cache()
 
     def save(self):
         os.makedirs(Cache.DIR, exist_ok=True)
         with open(Cache.PATH, "wb") as f:
             pickle.dump(self, f)
+
+    def _check_files(self):
+        for key, value in self.files.items():
+            if not os.path.exists(value):
+                return False
+        return True

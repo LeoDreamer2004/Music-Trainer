@@ -12,6 +12,8 @@ class SingletonMeta(type):
 
 
 class Cache(metaclass=SingletonMeta):
+    """The cache for the parameters used in the UI."""
+
     DIR = "rsc/cache"
     NAME = "__ui_cache__.pkl"
     PATH = os.path.join(DIR, NAME)
@@ -47,6 +49,8 @@ class Cache(metaclass=SingletonMeta):
 
     def _check_files(self):
         for key, value in self.files.items():
+            if value is None:
+                continue
             if not os.path.exists(value):
                 return False
         return True

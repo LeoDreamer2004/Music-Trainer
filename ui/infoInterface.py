@@ -10,6 +10,7 @@ from qfluentwidgets import (
     setThemeColor,
     InfoBar,
     PushButton,
+    SwitchButton,
     BodyLabel,
     CaptionLabel,
     HyperlinkLabel,
@@ -133,10 +134,16 @@ class PersonalizationCard(MyCard):
         self.outputLabel = BodyLabel("导出文件夹")
         self.outputCaption = CaptionLabel(cfg.files["outputFolder"])
 
+        self.openBtn = SwitchButton()
+        self.openBtn.setChecked(cfg.openWhenDone)
+        self.openBtn.checkedChanged.connect(self.openOutputSlot)
+        self.openLabel = BodyLabel("生成后打开文件夹")
+
         self.vLayout.setSpacing(10)
         self.addLine(self.themeBox, self.themeLabel, self.themeCaption)
         self.addLine(self.colorBtn, self.colorLabel)
         self.addLine(self.outputBtn, self.outputLabel, self.outputCaption)
+        self.addLine(self.openBtn, self.openLabel)
 
     def addLine(self, widget: QWidget, label: BodyLabel, caption: CaptionLabel = None):
         labelLayout = QVBoxLayout()
@@ -181,6 +188,9 @@ class PersonalizationCard(MyCard):
         )
         cfg.files["outputFolder"] = path
         self.outputCaption.setText(path)
+
+    def openOutputSlot(self, checked: bool):
+        cfg.openWhenDone = checked
 
 
 class LinkCard(MyCard):

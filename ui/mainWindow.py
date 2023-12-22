@@ -35,7 +35,6 @@ class StackedWidget(QFrame):
         self.view.currentChanged.connect(self.currentChanged)
 
     def addWidget(self, widget):
-        """add widget to view"""
         self.view.addWidget(widget)
 
     def widget(self, index: int):
@@ -169,4 +168,4 @@ class MainWindow(FramelessWindow):
 
     def closeEvent(self, a0: QCloseEvent) -> None:
         super().closeEvent(a0)
-        cfg.save()
+        cfg.save()  # save the configuration when the window is closed

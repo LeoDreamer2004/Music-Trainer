@@ -3,7 +3,7 @@ from time import time
 from multiprocessing import Process, Pipe, freeze_support
 from multiprocessing.connection import PipeConnection
 
-from PyQt5.QtCore import Qt, pyqtSignal, QThread
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QUrl
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QFormLayout,
 )
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QDesktopServices
 from qfluentwidgets import (
     PushButton,
     PrimaryPushButton,
@@ -29,6 +29,13 @@ from qfluentwidgets import (
 from midoWrapper import Midi
 from train import train
 from .config import cfg
+
+
+TRAIN_OUTPUT = "result.mid"
+
+
+def outputPath() -> str:
+    return cfg.files["outputFolder"] + TRAIN_OUTPUT
 
 
 class TrainInterface(QWidget):
@@ -181,7 +188,10 @@ class TrainInterface(QWidget):
 
     def trainStatus(self, status: int, info: str):
         if status == "0":
-            InfoBar.success("训练完成", "可查看结果result.mid", duration=3000, parent=self)
+            InfoBar.success("训练完成", f"可查看结果{TRAIN_OUTPUT}", duration=3000, parent=self)
+            if cfg.openWhenDone:
+                qurl = QUrl.fromLocalFile(cfg.files["outputFolder"])
+                QDesktopServices.openUrl(qurl)
         elif status == "1":
             warning = "请检查midi文件是否符合规范或参数是否正确\n此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
             warning += f"错误信息: {info}"
@@ -208,7 +218,7 @@ class TrainConnectionThread(QThread):
             args=(
                 self.send,
                 parent.refName,
-                cfg.files["outputFolder"] + "/result.mid",
+                outputPath(),
                 parent.population,
                 parent.mutation,
                 parent.iteration,

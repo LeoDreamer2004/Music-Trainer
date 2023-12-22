@@ -14,7 +14,9 @@
 
 midi 文件能更好地建立起音乐与计算机之间的联系。在 Python 语言中，对 midi 文件有较好的第三方模块支持，以下代码基于其中使用最多的 `mido` 库进行。
 
-为此，确保计算机中已经拥有 python 环境，同时使用 pip 作为模块管理工具。在文件目录下打开命令行中执行
+本项目的代码已经全部开源至 [GitHub](https://github.com/LeoDreamer2004/PKU-MathInMusic-2023)。关于具体的使用方法，可以查看仓库提供的 README 文件，也可以在 release 中下载已经打包好的可执行文件。
+
+如果要自行构建，请先确保计算机中已经拥有 python 环境，同时使用 pip 作为模块管理工具。在文件目录下打开命令行中执行
 
 ```shell
 pip install -r requirements.txt
@@ -28,9 +30,17 @@ pip install -r requirements.txt
 python ./geneticAlgorithm.py
 ```
 
-若无法运行，请尝试将 `python` 修改为 `py` 或 `python3`。
+若无法运行，请尝试将 `python` 修改为 `py` 或 `python3`。所有参考用的和生成出的 midi 文件均存放于 `midi` 文件夹下。
 
-所有参考用的和生成出的 midi 文件均存放于 `midi` 文件夹下。为了能更方便地预览 midi ，使用 musescore4 进行 midi 的展示。
+我们也提供了一个 GUI 应用程序，可以在命令行执行
+
+```shell
+python ./main.py
+```
+
+来打开。在 GUI 应用程序中，可以选择训练的参数，也可以选择参考 midi 文件和导出位置。在训练完成后，会自动打开生成的 midi 文件。
+
+为了能更方便地预览 midi ，使用 musescore4 进行 midi 的展示。
 
 ---
 
@@ -190,17 +200,17 @@ mido.Message("note_on", note=72, velocity=80, time=480)
 
 由于以下的作曲非常简单，没有必要使用 `mido` 中这样复杂的功能，因此我们对 `mido` 库做出了包装，即 `midoWrapper`。其中提供了对音符的类 `Note` 包装和音轨的类 `Track` 包装。以下介绍运行逻辑和一些重要的函数。
 
+首先我们把所有的音乐有关设置全部包装成一个类。
+
+```py
+class MusicSettings: ...
+```
+
+其中包含了调式、拍号、速度等等信息。这里的调式是一个字符串，例如 `C#` 或者 `Ebm`，而拍号则是一个分数，例如 `4/4` 或者 `3/4`。速度则是每分钟的拍数，例如 `120`。
+
 ```py
 class Note:
-    def __init__(
-        self, pitch: Pitch_T, length: int, start_time: int, velocity: int = VELOCITY
-    ):
-        # Here the "time" is "tick" in mido actually
-        self.pitch = pitch
-        self.length = length
-        self.start_time = start_time
-        self.velocity = velocity
-    
+    def __init__(self, pitch: Pitch_T, length: int, start_time: int, velocity: int): ...
     @property
     def end_time(self):
         return self.start_time + self.length
@@ -220,10 +230,7 @@ def random_pitch_in_mode(
 
 ```py
 class Track:
-    def __init__(self, instrument: int = 0, key: Key_T = "C"):
-        self.instrument = instrument
-        self.key = key
-        self.note: List[Note] = []
+     def __init__(self, settings: MusicSettings = None, instrument: int = 0): ...
 ```
 
 类 `Track` 当中重点强调了乐器和调式的属性，同时把所有的音符置于一个列表当中。
@@ -231,8 +238,8 @@ class Track:
 其中提供了与 `mido` 内置的 `midiTrack` 类型的相互转化接口：
 
 ```py
-def from_track(track: mido.midiTrack) -> "Track": ...
-def to_track(self) -> mido.midiTrack: ...
+def from_mido_track(self, track: mido.MidiTrack) -> "Track": ...
+def to_mido_track(self) -> mido.MidiTrack: ...
 ```
 
 同时，由于我们的节奏训练和音调训练是分离进行的，因此我们给出了两个函数，分别用于生成随机音轨和在给定节奏之上生成随机的音高：
@@ -250,12 +257,14 @@ def inverse(self, center): ...
 def retrograde(self): ...
 ```
 
-最后，我们也提供了一些简单的函数，分别用于进行 midi 文件的生成、解析、存储。
+我们也对 Midi 整个文件做了包装。类 `Midi` 包含了音乐设置，同时包含了一个音轨列表，也提供了与 `mido` 内置的 `midiFile` 类型的相互转化接口：
 
 ```py
-def generate_midi(key: Key_T = None): ...
-def parse_midi(filename: str): ...
-def save_midi(s: mido.midiFile, filename: str): ...
+class Midi:
+    def __init__(self, settings: MusicSettings = None): ...
+    def to_mido_midi(self) -> mido.MidiFile: ...
+    @staticmethod
+    def from_midi(filename: str) -> "Midi": ...
 ```
 
 ### 音轨的生成与读取

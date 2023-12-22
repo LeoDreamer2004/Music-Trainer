@@ -14,11 +14,7 @@ Bar = List[Note]
 class Track:
     """A wrapper for mido.MidiTrack."""
 
-    def __init__(
-        self,
-        settings: MusicSettings = None,
-        instrument: int = 0,
-    ):
+    def __init__(self, settings: MusicSettings = None, instrument: int = 0):
         self.instrument = instrument
         self.sts = settings
         self.note: List[Note] = []

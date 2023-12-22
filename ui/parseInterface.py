@@ -1,13 +1,13 @@
 import os
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QFileDialog,
 )
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QDesktopServices
 from qfluentwidgets import (
     PushButton,
     PrimaryPushButton,
@@ -20,6 +20,12 @@ from qfluentwidgets import (
 
 from midoWrapper import Midi
 from .config import cfg
+
+PARSE_OUTPUT = "parse.txt"
+
+
+def outputPath() -> str:
+    return cfg.files["outputFolder"] + PARSE_OUTPUT
 
 
 class ParseInterface(QWidget):
@@ -123,6 +129,10 @@ class ParseInterface(QWidget):
         try:
             self._parseMidi()
             InfoBar.success("解析完成！", "请查看你的midi文件夹", duration=3000, parent=self)
+            if cfg.openWhenDone:
+                qurl = QUrl.fromLocalFile(cfg.files["outputFolder"])
+                QDesktopServices.openUrl(qurl)
+
         except Exception as e:
             warning = "请检查midi文件是否符合规范\n此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
             warning += f"错误信息: {e}"
@@ -130,7 +140,7 @@ class ParseInterface(QWidget):
             wrongBox.exec()
 
     def _parseMidi(self):
-        filename = cfg.files["outputFolder"] + "/parse.txt"
+        filename = cfg.files["outputFolder"] + "parse.txt"
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         midi = Midi.from_midi(self.filename)
 
@@ -158,6 +168,8 @@ class ParseInterface(QWidget):
                 self.output.appendHtml(f"<font color=blue><b>{line}</b></font>")
             else:
                 self.output.appendPlainText(line)
+
+        print(f"Result saved to {outputPath()}")
 
         with open(filename, "w") as f:
             f.write(output)

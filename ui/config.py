@@ -23,7 +23,6 @@ class Configuration(metaclass=Singleton):
 
     def __init__(self):
         """Default configuration"""
-        print(os.getcwd())
         self.ui = {
             "theme": "auto",
             "themeColor": "#0078D7",
@@ -39,6 +38,7 @@ class Configuration(metaclass=Singleton):
             "iteration": 2000,
             "withCompany": True,
         }
+        self.openWhenDone = False
 
     @staticmethod
     def load() -> "Configuration":

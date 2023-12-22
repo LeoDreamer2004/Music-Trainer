@@ -1,7 +1,3 @@
-Widget > QLabel {
-    font: 24px 'Segoe UI', 'Microsoft YaHei';
-}
-
 StackedWidget {
     border: 1px solid rgb(29, 29, 29);
     border-right: none;
@@ -10,19 +6,25 @@ StackedWidget {
     background-color: rgb(39, 39, 39);
 }
 
-Window {
+MainWindow {
     background-color: rgb(32, 32, 32);
 }
 
-Widget > QLabel {
+QLabel {
     color: white;
+    font-family: 'Segoe UI', 'Microsoft YaHei';
 }
 
-CustomTitleBar {
+CaptionLabel {
+    color:  rgb(200, 200, 200);
+    font-size: 12px;
+}
+
+MyTitleBar {
     background-color: transparent;
 }
 
-CustomTitleBar>QLabel#titleLabel {
+MyTitleBar>QLabel#titleLabel {
     background: transparent;
     font: 13px 'Segoe UI';
     padding: 0 10px;

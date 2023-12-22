@@ -1,7 +1,10 @@
 from PyQt5.QtCore import Qt, pyqtSignal, QEasingCurve
 from PyQt5.QtWidgets import QFrame, QLabel, QHBoxLayout, QVBoxLayout
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QCloseEvent, QIcon
 from qfluentwidgets import (
+    setTheme,
+    isDarkTheme,
+    Theme,
     BodyLabel,
     NavigationBar,
     FluentIcon,
@@ -13,8 +16,7 @@ from qframelesswindow import FramelessWindow, TitleBar
 from .parseInterface import ParseInterface
 from .trainInterface import TrainInterface
 from .infoInterface import InfoInterface
-
-# import darkdetect
+from .config import cfg
 
 
 class StackedWidget(QFrame):
@@ -73,7 +75,6 @@ class MyTitleBar(TitleBar):
         self.hBoxLayout.insertWidget(
             2, self.titleLabel, 0, Qt.AlignLeft | Qt.AlignVCenter
         )
-        self.hBoxLayout.insertSpacing(2, 10)
         self.titleLabel.setObjectName("titleLabel")
         self.window().windowTitleChanged.connect(self.setTitle)
 
@@ -105,7 +106,6 @@ class MainWindow(FramelessWindow):
         self.setWindowTitle("Music Trainer")
         self.setWindowIcon(QIcon("rsc/img/icon.png"))
         self.titleBar.setAttribute(Qt.WA_StyledBackground)
-        # self.setQss()
 
         self.hBoxLayout = QHBoxLayout(self)
         self.navigationBar = NavigationBar(self)
@@ -117,6 +117,7 @@ class MainWindow(FramelessWindow):
 
         self.initLayout()
         self.initNavigation()
+        self.setQss()
 
     def initLayout(self):
         self.hBoxLayout.setSpacing(0)
@@ -155,10 +156,17 @@ class MainWindow(FramelessWindow):
         widget = self.stackWidget.widget(index)
         self.navigationBar.setCurrentItem(widget.objectName())
 
-    # def setQss(self):
-    #     isDark = darkdetect.isDark()
-    #     if isDark:
-    #         setTheme(Theme.DARK)
-    #     color = "dark" if isDark else "light"
-    #     with open(f"ui/resource/{color}.qss", encoding='utf-8') as f:
-    #         self.setStyleSheet(f.read())
+    def setQss(self):
+        if cfg.ui["theme"] == "light":
+            setTheme(Theme.LIGHT)
+        elif cfg.ui["theme"] == "dark":
+            setTheme(Theme.DARK)
+        elif cfg.ui["theme"] == "auto":
+            setTheme(Theme.AUTO)
+        theme = "dark" if isDarkTheme() else "light"
+        with open(f"rsc/{theme}.qss", encoding="utf-8") as f:
+            self.setStyleSheet(f.read())
+
+    def closeEvent(self, a0: QCloseEvent) -> None:
+        super().closeEvent(a0)
+        cfg.save()

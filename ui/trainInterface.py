@@ -1,5 +1,4 @@
 import sys
-import os
 from time import time
 from multiprocessing import Process, Pipe, freeze_support
 from multiprocessing.connection import PipeConnection
@@ -12,7 +11,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QFormLayout,
 )
-from PyQt5.QtGui import QFont, QPalette, QColor
+from PyQt5.QtGui import QFont
 from qfluentwidgets import (
     PushButton,
     PrimaryPushButton,
@@ -22,16 +21,14 @@ from qfluentwidgets import (
     BodyLabel,
     PlainTextEdit,
     SpinBox,
-    CompactSpinBox,
     CardWidget,
     DoubleSpinBox,
-    CompactDoubleSpinBox,
     SwitchButton,
 )
 
 from midoWrapper import Midi
 from train import train
-from .cache import Cache
+from .config import cfg
 
 
 class TrainInterface(QWidget):
@@ -114,12 +111,11 @@ class TrainInterface(QWidget):
         self.paramBtn.clicked.connect(self.showParamWindow)
 
     def initParameters(self):
-        cache = Cache.load()
-        self.population = cache.trainPrams["population"]
-        self.mutation = cache.trainPrams["mutation"]
-        self.iteration = cache.trainPrams["iteration"]
-        self.withCompany = cache.trainPrams["withCompany"]
-        self.refName = cache.files["trainReference"]
+        self.population = cfg.trainPrams["population"]
+        self.mutation = cfg.trainPrams["mutation"]
+        self.iteration = cfg.trainPrams["iteration"]
+        self.withCompany = cfg.trainPrams["withCompany"]
+        self.refName = cfg.files["trainReference"]
         if self.refName is not None:
             self.fileLabel.setText(self.refName)
         else:
@@ -150,13 +146,11 @@ class TrainInterface(QWidget):
 
         self.startBtn.setEnabled(False)
         self.stopBtn.setVisible(True)
-        cache = Cache.load()
-        cache.trainPrams["population"] = self.population
-        cache.trainPrams["mutation"] = self.mutation
-        cache.trainPrams["iteration"] = self.iteration
-        cache.trainPrams["withCompany"] = self.withCompany
-        cache.files["trainReference"] = self.refName
-        cache.save()
+        cfg.trainPrams["population"] = self.population
+        cfg.trainPrams["mutation"] = self.mutation
+        cfg.trainPrams["iteration"] = self.iteration
+        cfg.trainPrams["withCompany"] = self.withCompany
+        cfg.files["trainReference"] = self.refName
 
         self.trainThr = TrainConnectionThread(self)
         self.trainThr.start()
@@ -166,12 +160,14 @@ class TrainInterface(QWidget):
         self.trainThr.stopTrain()
 
     def showParamWindow(self):
-        paramWindow = ParameterWindow(self)
-        if paramWindow.exec():
-            self.population = paramWindow.populationEdit.value()
-            self.mutation = paramWindow.mutationEdit.value()
-            self.iteration = paramWindow.iterationEdit.value()
-            self.withCompany = paramWindow.withCompany
+        w = ParameterWindow(self)
+        w.yesButton.setText("确定")
+        w.cancelButton.setText("取消")
+        if w.exec():
+            self.population = w.populationEdit.value()
+            self.mutation = w.mutationEdit.value()
+            self.iteration = w.iterationEdit.value()
+            self.withCompany = w.withCompany
 
     def writeBuf(self, buf: str):
         if buf == "\n":
@@ -185,9 +181,7 @@ class TrainInterface(QWidget):
 
     def trainStatus(self, status: int, info: str):
         if status == "0":
-            InfoBar.success(
-                "训练完成", "训练已完成，可在midi/result.mid查看结果", duration=3000, parent=self
-            )
+            InfoBar.success("训练完成", "可查看结果result.mid", duration=3000, parent=self)
         elif status == "1":
             warning = "请检查midi文件是否符合规范或参数是否正确\n此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
             warning += f"错误信息: {info}"
@@ -214,7 +208,7 @@ class TrainConnectionThread(QThread):
             args=(
                 self.send,
                 parent.refName,
-                os.path.join(os.getcwd(), r"midi\result.mid"),
+                cfg.files["outputFolder"] + "/result.mid",
                 parent.population,
                 parent.mutation,
                 parent.iteration,

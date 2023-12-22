@@ -19,7 +19,7 @@ from qfluentwidgets import (
 )
 
 from midoWrapper import Midi
-from .cache import Cache
+from .config import cfg
 
 
 class ParseInterface(QWidget):
@@ -83,8 +83,7 @@ class ParseInterface(QWidget):
         self.setLayout(self.form)
 
     def initParameters(self):
-        cache = Cache.load()
-        self.filename = cache.files["parseMidi"]
+        self.filename = cfg.files["parseMidi"]
         if self.filename is not None:
             self.fileLabel.setText(self.filename)
         else:
@@ -98,10 +97,10 @@ class ParseInterface(QWidget):
 
     def fileDialog(self):
         title = "Midi解析"
-        dialog = QFileDialog(self, title, filter="midi files (*.mid)")
-        dialog.setFileMode(QFileDialog.ExistingFile)
-        if dialog.exec_():
-            files = dialog.selectedFiles()
+        w = QFileDialog(self, title, filter="midi files (*.mid)")
+        w.setFileMode(QFileDialog.ExistingFile)
+        if w.exec_():
+            files = w.selectedFiles()
             if files == []:
                 return
             self.filename = files[0]
@@ -119,9 +118,7 @@ class ParseInterface(QWidget):
             InfoBar.error("未选择文件", "请先选择midi文件！", duration=3000, parent=self)
             return
 
-        cache = Cache.load()
-        cache.files["parseMidi"] = self.filename
-        cache.save()
+        cfg.files["parseMidi"] = self.filename
 
         try:
             self._parseMidi()
@@ -133,7 +130,7 @@ class ParseInterface(QWidget):
             wrongBox.exec()
 
     def _parseMidi(self):
-        filename = os.getcwd() + "/midi/parse.txt"
+        filename = cfg.files["outputFolder"] + "/parse.txt"
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         midi = Midi.from_midi(self.filename)
 

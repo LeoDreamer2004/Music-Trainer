@@ -3,25 +3,25 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QFileDialog,
 )
-from PyQt5.QtGui import QFont, QDesktopServices
+from PyQt5.QtGui import QDesktopServices, QPixmap, QColor
 from qfluentwidgets import (
-    PushButton,
+    setThemeColor,
     InfoBar,
-    MessageBox,
-    TextEdit,
+    PushButton,
     BodyLabel,
-    StrongBodyLabel,
     CaptionLabel,
-    CardWidget,
-    PlainTextEdit,
     HyperlinkLabel,
+    ComboBox,
     PrimaryPushButton,
+    ColorDialog,
     FluentIcon,
     IconWidget,
     HeaderCardWidget,
     SingleDirectionScrollArea,
 )
+from .config import cfg
 
 
 class InfoInterface(SingleDirectionScrollArea):
@@ -40,12 +40,15 @@ class InfoInterface(SingleDirectionScrollArea):
         self.mainLayout.setContentsMargins(16, 20, 16, 20)
 
         self.usageCard = UsageCard(self)
-        self.authorCard = SoftwareCard(self)
+        self.personalCard = PersonalizationCard(self)
+        self.authorCard = LinkCard(self)
         self.licenseCard = LicenseCard(self)
 
-        self.mainLayout.addWidget(self.usageCard, 0, Qt.AlignTop)
+        self.mainLayout.addWidget(self.usageCard, 0)
+        self.mainLayout.addWidget(self.personalCard, 0)
         self.mainLayout.addWidget(self.authorCard, 0)
         self.mainLayout.addWidget(self.licenseCard, 0)
+
         self.setWidget(self.view)
         self.setWidgetResizable(True)
 
@@ -53,16 +56,24 @@ class InfoInterface(SingleDirectionScrollArea):
         self.view.setStyleSheet("QWidget {background:transparent}")
 
 
-class UsageCard(HeaderCardWidget):
+class MyCard(HeaderCardWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.interface = parent
+        self.vLayout = QVBoxLayout()
+        self.vLayout.setContentsMargins(0, 0, 0, 0)
+        self.viewLayout.addLayout(self.vLayout)
         self.initUi()
 
+    def initUi(self):
+        raise NotImplementedError
+
+
+class UsageCard(MyCard):
     def initUi(self):
         self.setTitle("使用说明")
 
         self.usageText = BodyLabel()
-        self.usageText.setFont(QFont("Microsoft YaHei", 10))
         self.usageText.setContentsMargins(0, 0, 0, 0)
         self.usageText.setWordWrap(True)
         usage = (
@@ -92,19 +103,87 @@ class UsageCard(HeaderCardWidget):
         self.linkLayout.addWidget(self.downloadLabel)
         self.linkLayout.addStretch(1)
 
-        self.vLayout = QVBoxLayout()
-        self.vLayout.setContentsMargins(0, 0, 0, 0)
         self.vLayout.addWidget(self.usageText)
         self.vLayout.addLayout(self.linkLayout)
-        self.viewLayout.addLayout(self.vLayout)
 
 
-class SoftwareCard(HeaderCardWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.initUi()
-        self.connectSignalToSlot()
+class PersonalizationCard(MyCard):
+    def initUi(self):
+        self.setTitle("个性化")
 
+        self.themeDict = {
+            "auto": "跟随系统",
+            "light": "浅色",
+            "dark": "深色",
+        }
+        self.themeBox = ComboBox(self)
+        self.themeBox.addItems(self.themeDict.values())
+        self.themeBox.setCurrentText(self.themeDict[cfg.ui["theme"]])
+        self.themeBox.currentTextChanged.connect(self.updateTheme)
+        self.themeLabel = BodyLabel("选择模式")
+        self.themeCaption = CaptionLabel("重启软件生效")
+
+        self.colorBtn = PushButton()
+        self.colorBtn.clicked.connect(self.chooseColorSlot)
+        self.updateColor(QColor(cfg.ui["themeColor"]))
+        self.colorLabel = BodyLabel("主题色")
+
+        self.outputBtn = PushButton("选择文件夹")
+        self.outputBtn.clicked.connect(self.chooseOutputSlot)
+        self.outputLabel = BodyLabel("导出文件夹")
+        self.outputCaption = CaptionLabel(cfg.files["outputFolder"])
+
+        self.vLayout.setSpacing(10)
+        self.addLine(self.themeBox, self.themeLabel, self.themeCaption)
+        self.addLine(self.colorBtn, self.colorLabel)
+        self.addLine(self.outputBtn, self.outputLabel, self.outputCaption)
+
+    def addLine(self, widget: QWidget, label: BodyLabel, caption: CaptionLabel = None):
+        labelLayout = QVBoxLayout()
+        labelLayout.setSpacing(2)
+        labelLayout.addWidget(label)
+        if caption is not None:
+            labelLayout.addWidget(caption)
+
+        lineLayout = QHBoxLayout()
+        lineLayout.setContentsMargins(0, 0, 0, 0)
+        widget.setFixedWidth(120)
+        lineLayout.addLayout(labelLayout)
+        lineLayout.addWidget(widget, alignment=Qt.AlignRight)
+        self.vLayout.addLayout(lineLayout)
+
+    def chooseColorSlot(self):
+        w = ColorDialog(self.color, "选择主题颜色", self.interface)
+        w.editLabel.setText("编辑颜色")
+        w.yesButton.setText("确定")
+        w.cancelButton.setText("取消")
+        w.colorChanged.connect(self.updateColor)
+        w.exec()
+
+    def updateColor(self, color: QColor):
+        cfg.ui["themeColor"] = color.name()
+        setThemeColor(color)
+        self.color = color
+        showSquare = QPixmap(20, 20)
+        showSquare.fill(self.color)
+        self.colorBtn.setIcon(showSquare)
+        self.colorBtn.setText(self.color.name())
+
+    def updateTheme(self, text: str):
+        for key, value in self.themeDict.items():
+            if value == text:
+                cfg.ui["theme"] = key
+                break
+
+    def chooseOutputSlot(self):
+        path = QFileDialog.getExistingDirectory(
+            self, "导出至", "", QFileDialog.ShowDirsOnly
+        )
+        cfg.files["outputFolder"] = path
+        self.outputCaption.setText(path)
+
+
+class LinkCard(MyCard):
     def initUi(self):
         self.setTitle("关于")
 
@@ -120,22 +199,21 @@ class SoftwareCard(HeaderCardWidget):
         self.authorBtn = PushButton("作者主页", self)
         self.authorBtn.setFixedWidth(150)
 
-        self.vBoxLayout = QVBoxLayout()
-        self.hBoxLayout = QHBoxLayout()
-        self.hBoxLayout.setSpacing(20)
-        self.vBoxLayout.setSpacing(20)
-        self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
-        self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.hLayout = QHBoxLayout()
+        self.hLayout.setSpacing(20)
+        self.vLayout.setSpacing(20)
+        self.hLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.hBoxLayout.addWidget(self.githubIcon)
-        self.hBoxLayout.addWidget(self.githubBtn)
-        self.hBoxLayout.addWidget(self.issueBtn)
-        self.hBoxLayout.addWidget(self.authorBtn)
-        self.hBoxLayout.addStretch(1)
+        self.hLayout.addWidget(self.githubIcon)
+        self.hLayout.addWidget(self.githubBtn)
+        self.hLayout.addWidget(self.issueBtn)
+        self.hLayout.addWidget(self.authorBtn)
+        self.hLayout.addStretch(1)
 
         # self.vBoxLayout.addWidget(self.authorLabel)
-        self.vBoxLayout.addLayout(self.hBoxLayout)
-        self.viewLayout.addLayout(self.vBoxLayout)
+        self.vLayout.addLayout(self.hLayout)
+
+        self.connectSignalToSlot()
 
     def connectSignalToSlot(self):
         sourceUrl = "https://github.com/LeoDreamer2004/PKU-MathInMusic-2023"
@@ -146,21 +224,25 @@ class SoftwareCard(HeaderCardWidget):
         self.authorBtn.clicked.connect(self.openUrlSlot(authorUrl))
 
     def openUrlSlot(self, url: str):
-        return lambda: QDesktopServices.openUrl(QUrl(url))
+        def wrapper():
+            QDesktopServices.openUrl(QUrl(url))
+            InfoBar.new(
+                icon=FluentIcon.INFO,
+                title="正在打开网页",
+                content=url,
+                orient=Qt.Vertical,
+                duration=3000,
+                parent=self.interface,
+            )
+
+        return wrapper
 
 
-class LicenseCard(HeaderCardWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.initUi()
-
+class LicenseCard(MyCard):
     def initUi(self):
         self.setTitle("法律与版权许可")
-        self.vLayout = QVBoxLayout()
-        self.vLayout.setContentsMargins(0, 0, 0, 0)
         announcement = "Copyright (c) 2023 LeoDreamer2004, crlcrl1 / MIT License"
         self.authorLabel = BodyLabel("真的有人会在意这种小程序的许可吗？")
         self.licenseText = CaptionLabel(announcement)
         self.vLayout.addWidget(self.authorLabel)
         self.vLayout.addWidget(self.licenseText)
-        self.viewLayout.addLayout(self.vLayout)

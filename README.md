@@ -11,7 +11,13 @@ Meanwhile, we provide an easy API `midoWrapper` for `mido`. See the docstrings f
 
 ## How to build
 
-Make sure you have installed `python3` and `pip`. All used third parties are saved in the config text. Run in terminal:
+Make sure you have installed `python3` and `pip`. All used third parties are saved in the config text. You can use
+
+```shell
+git clone https://github.com/LeoDreamer2004/PKU-MathInMusic-2023.git
+```
+
+to copy the repository to your folder, and then execute in the command line within this folder:
 
 ```shell
 pip install -r requirements.txt

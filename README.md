@@ -11,7 +11,7 @@ Meanwhile, we provide an easy API `midoWrapper` for `mido`. See the docstrings f
 
 ## How to build
 
-Make sure you have installed `python3` and `pip`. The third party used are all saved in the config text. Run in terminal:
+Make sure you have installed `python3` and `pip`. All used third parties are saved in the config text. Run in terminal:
 
 ```shell
 pip install -r requirements.txt

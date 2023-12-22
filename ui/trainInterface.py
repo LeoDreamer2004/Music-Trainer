@@ -1,7 +1,7 @@
 import sys
 import os
 from time import time
-from multiprocessing import Process, Pipe
+from multiprocessing import Process, Pipe, freeze_support
 from multiprocessing.connection import PipeConnection
 
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
@@ -208,6 +208,7 @@ class TrainConnectionThread(QThread):
         self.trainStatus.connect(parent.trainStatus)
         self.outputBuf.connect(parent.writeBuf)
         self.recv, self.send = Pipe()
+        freeze_support()
         self.process = Process(
             target=TrainProcess.run,
             args=(

@@ -64,7 +64,7 @@ class Note:
 
     @staticmethod
     def random_pitch_in_mode(
-        key: Key_T, min_pitch: int = NOTE_MIN, max_pitch: int = NOTE_MAX
+        key: Key_T, min_pitch: Pitch_T = NOTE_MIN, max_pitch: Pitch_T = NOTE_MAX
     ):
         """Generate a random note in the given mode
         with the pitch in the range [min_pitch, max_pitch]."""

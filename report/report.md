@@ -8,12 +8,12 @@
 
 本次作业要求利用 **遗传算法 (Genetic Algorithm)** 来进行机器作曲。通过随机生成或根据现有音乐片段，建立合适的适应度函数指引进化，生成更好的音乐片段。
 
-算法支持：林鸿凯 柯宇斌
-文献支持：陈润璘 林晋
-脚本编写：原梓轩 陈润璘
-GUI设计：原梓轩 王孝文
-程序测试：陈润璘 林晋
-报告编写：原梓轩 陈润璘
+ 算法支持：林鸿凯 柯宇斌
+	文献支持：陈润璘 林晋
+	脚本编写：原梓轩 陈润璘
+	GUI设计：原梓轩 王孝文
+	程序测试：陈润璘 林晋
+	报告编写：原梓轩 陈润璘
 
 ---
 
@@ -45,13 +45,12 @@ python ./geneticAlgorithm.py
 python ./main.py
 ```
 
-来打开。此 GUI 程序基于 `PyQt5` 库开发，在其中可以方便地选择训练的参数，也可以选择参考 midi 文件和导出位置。
-
-![训练GUI](img/trainer_train.png)
+来打开。如果无法打开 GUI 窗口，你可能需要设置一些环境变量，具体请参考[这里](https://blog.csdn.net/weixin_43917589/article/details/106137952)。此 GUI 程序基于 `PyQt5` 库开发，在其中可以方便地选择训练的参数，也可以选择参考 midi 文件和导出位置。
+<img src="img/trainer_train.png" alt="训练GUI" style="zoom: 50%;" />
 开始训练后，能够可视化地看到训练的输出。训练结束之后有醒目的提示。我们也额外提供了解析 midi 文件的功能，可以在程序的第二个标签页中进行。
-![训练控制台](img/train_output.png)
+<img src="img/train_output.png" alt="训练控制台" style="zoom: 50%;" />
 需要注意的是，由于库解析的限制，选取的 midi 有一定的要求。请参看程序当中“关于”标签页的说明。我们也提供了一些基本信息和个性化设置。
-![关于程序](img/trainer_info.png)
+<img src="img/trainer_info.png" alt="关于程序" style="zoom: 50%;" />
 
 在下文中，为了能更方便地预览 midi ，使用 musescore4 进行 midi 的展示。
 
@@ -83,8 +82,9 @@ python ./main.py
 衡量适应度有多方面的因素，包括：
 
 - 我们希望强拍上有音。例如对于一个 4/4 拍曲子，一个小节当中的第一拍和第三拍最好有音。
-![节奏实例1](img/ryhthm1.png)
-在这个例子当中，第一小节的一三拍都有音，而第二小节则不然，因此我们给第二小节一个负权重。
+  <img src="img/ryhthm1.png" alt="节奏实例1" style="zoom:80%;" />
+  在这个例子当中，第一小节的一三拍都有音，而第二小节则不然，因此我们给第二小节一个负权重。
+
     > **适应度公式：**
     $$
     f_1 = \frac{r_1}{n}(b-2n)
@@ -281,7 +281,7 @@ class Midi:
 
 ### 音轨的生成与读取
 
-具体内容详见 [测试代码](wrapperTest.py) 。
+具体内容详见 [测试代码](../wrapperTest.py) 。
 
 - 在 `generate_random_midi_test` 中，我们建立了一个空白的 midi 文件，并利用 `generate_random_track` 生成了一个#g小调的4小节随机音乐片段。随后将音轨进行深拷贝，再对其作逆行变换，作为第二条音轨添加进去。这样，输出了一个双音轨的音乐片段，其中两个音轨互为逆行关系。
 ![随机片段](img/random_piece.png)

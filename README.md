@@ -7,9 +7,11 @@ Midterm Assignment for Math In Music course in 2023 Autumn.
 ## What is this
 
 The target is to create short music piece by machine with genetic algorithm.
-Meanwhile, we provide an easy API `midoWrapper` for `mido`. See the docstrings for more infomation.
+Meanwhile, we provide an easy API `midoWrapper` for `mido`. See the docstrings for more information.
 
-## How to build
+For more detailed information, you can find our report in [report/report.md](report/report.md) or [report/report.pdf](report/report.pdf).
+
+## Preparation
 
 Make sure you have installed `python3` and `pip`. All used third parties are saved in the config text. You can use
 

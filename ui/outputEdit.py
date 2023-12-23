@@ -27,6 +27,9 @@ class OutputEdit(PlainTextEdit):
     def mouseDoubleClickEvent(self, e):
         pass
 
+    def contextMenuEvent(self, e):
+        pass
+
     def appendLine(self, output: str, color: str = None, bold: bool = False) -> None:
         html = output
         if color is not None:

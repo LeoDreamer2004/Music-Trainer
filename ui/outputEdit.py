@@ -21,6 +21,9 @@ class OutputEdit(PlainTextEdit):
     def outputPath(self) -> str:
         return cfg.files["outputFolder"] + self.outputFile
 
+    def mousePressEvent(self, e):
+        pass
+
     def appendLine(self, output: str, color: str = None, bold: bool = False) -> None:
         html = output
         if color is not None:

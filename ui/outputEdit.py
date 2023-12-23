@@ -43,7 +43,7 @@ class OutputEdit(PlainTextEdit):
         darkMap = {
             "red": "#FF3333",
             "green": "#33FF33",
-            "blue": "#3333FF",
+            "blue": "#00CCFF",
         }
         if isDarkTheme():
             return darkMap.get(color, color)

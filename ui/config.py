@@ -49,8 +49,8 @@ class Configuration(metaclass=Singleton):
             config: Configuration = pickle.load(f)
             if config._check_valid():
                 return config
-            else:
-                return Configuration()
+        os.remove(Configuration.PATH)  # remove invalid config
+        return Configuration()
 
     def save(self):
         os.makedirs(Configuration.DIR, exist_ok=True)

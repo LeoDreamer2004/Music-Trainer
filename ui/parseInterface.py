@@ -148,7 +148,7 @@ class ParseInterface(QWidget):
             elif line.startswith("-----"):
                 self.output.appendLine(line, "blue", True)
             else:
-                self.output.appendPlainText(line)
+                self.output.appendLine(line)
 
         self.output.printFinal()
 

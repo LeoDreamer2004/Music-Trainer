@@ -1,8 +1,5 @@
 from PyQt5.QtGui import QFont
-from qfluentwidgets import (
-    isDarkTheme,
-    PlainTextEdit,
-)
+from qfluentwidgets import isDarkTheme, PlainTextEdit
 
 from .config import cfg
 
@@ -15,7 +12,7 @@ class OutputEdit(PlainTextEdit):
         self.outputFile = outputFile
         self.setReadOnly(True)
         self.setLineWrapMode(PlainTextEdit.NoWrap)
-        self.setFont(QFont("Consolas", 10))
+        self.setFont(QFont("Consolas", 11))
 
     @property
     def outputPath(self) -> str:
@@ -52,7 +49,7 @@ class OutputEdit(PlainTextEdit):
             "blue": "#0000FF",
         }
         darkMap = {
-            "red": "#FF3333",
+            "red": "#FF5555",
             "green": "#33FF33",
             "blue": "#00CCFF",
         }

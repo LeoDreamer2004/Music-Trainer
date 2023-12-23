@@ -174,11 +174,11 @@ class TrainInterface(QWidget):
         elif buf.startswith(("[!]", "Final")):
             self.output.appendLine(buf, "red", True)
         else:
-            self.output.appendPlainText(buf)
+            self.output.appendLine(buf)
 
     def trainStatus(self, status: int, info: str):
         if status == "0":  # train success
-            self.output.appendPlainText("\n")
+            self.output.appendLine("\n")
             self.output.printFinal()
             InfoBar.success(
                 "训练完成",

@@ -15,7 +15,7 @@ MainWindow {
 }
 
 CaptionLabel {
-    color:  rgb(30, 30, 30);
+    color:  rgb(60, 60, 60);
     font-size: 12px;
 }
 

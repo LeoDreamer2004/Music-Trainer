@@ -7,25 +7,19 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
 )
-from PyQt5.QtGui import QFont, QDesktopServices
+from PyQt5.QtGui import QDesktopServices
 from qfluentwidgets import (
     PushButton,
     PrimaryPushButton,
     InfoBar,
     MessageBox,
     BodyLabel,
-    PlainTextEdit,
     CardWidget,
 )
 
 from midoWrapper import Midi
 from .config import cfg
-
-PARSE_OUTPUT = "parse.txt"
-
-
-def outputPath() -> str:
-    return cfg.files["outputFolder"] + PARSE_OUTPUT
+from .outputEdit import OutputEdit
 
 
 class ParseInterface(QWidget):
@@ -67,10 +61,7 @@ class ParseInterface(QWidget):
         self.startBtn.setFixedWidth(150)
 
         # output
-        self.output = PlainTextEdit()
-        self.output.setReadOnly(True)
-        self.output.setLineWrapMode(PlainTextEdit.NoWrap)
-        self.output.setFont(QFont("Consolas", 10))
+        self.output = OutputEdit("parse.txt", self)
 
         # card
         self.card = CardWidget(self)
@@ -135,7 +126,7 @@ class ParseInterface(QWidget):
 
         except Exception as e:
             warning = "请检查midi文件是否符合规范\n此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
-            warning += f"错误信息: {e}"
+            warning += "错误信息: " + str(e).replace("\n", " ")
             wrongBox = MessageBox("解析失败", warning, self)
             wrongBox.exec()
 
@@ -149,7 +140,7 @@ class ParseInterface(QWidget):
         output += header
         output += "####################\n"
         for line in output.split("\n"):
-            self.output.appendHtml(f"<font color=green><b>{line}</b></font>")
+            self.output.appendOutput(line, "green", True)
 
         for idx, track in enumerate(midi.tracks):
             output += "========================\n"
@@ -161,15 +152,15 @@ class ParseInterface(QWidget):
 
         for line in output.split("\n")[len(header.split("\n")) + 1 :]:
             if line.startswith(("Track", "=========")):
-                self.output.appendHtml(f"<font color=red><b>{line}</b></font>")
+                self.output.appendOutput(line, "red", True)
             elif line.startswith("instrument"):
-                self.output.appendHtml(f"<font color=red>{line}</font>")
+                self.output.appendOutput(line, "red")
             elif line.startswith("-----"):
-                self.output.appendHtml(f"<font color=blue><b>{line}</b></font>")
+                self.output.appendOutput(line, "blue", True)
             else:
                 self.output.appendPlainText(line)
 
-        print(f"Result saved to {outputPath()}")
+        self.output.printFinal()
 
         with open(filename, "w") as f:
             f.write(output)

@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QFormLayout,
 )
-from PyQt5.QtGui import QFont, QDesktopServices
+from PyQt5.QtGui import QDesktopServices
 from qfluentwidgets import (
     PushButton,
     PrimaryPushButton,
@@ -19,7 +19,6 @@ from qfluentwidgets import (
     MessageBox,
     MessageBoxBase,
     BodyLabel,
-    PlainTextEdit,
     SpinBox,
     CardWidget,
     DoubleSpinBox,
@@ -29,13 +28,7 @@ from qfluentwidgets import (
 from midoWrapper import Midi
 from train import train
 from .config import cfg
-
-
-TRAIN_OUTPUT = "result.mid"
-
-
-def outputPath() -> str:
-    return cfg.files["outputFolder"] + TRAIN_OUTPUT
+from .outputEdit import OutputEdit
 
 
 class TrainInterface(QWidget):
@@ -88,10 +81,7 @@ class TrainInterface(QWidget):
         self.trainLayout.addStretch(1)
 
         # output
-        self.output = PlainTextEdit()
-        self.output.setReadOnly(True)
-        self.output.setLineWrapMode(PlainTextEdit.NoWrap)
-        self.output.setFont(QFont("Consolas", 10))
+        self.output = OutputEdit("result.mid", self)
 
         # card
         self.card = CardWidget(self)
@@ -180,25 +170,35 @@ class TrainInterface(QWidget):
         if buf == "\n":
             return
         elif buf.startswith("----"):
-            self.output.appendHtml(f"<font color=blue><b>{buf}</b></font>")
+            self.output.appendOutput(buf, "blue", True)
         elif buf.startswith(("[!]", "Final")):
-            self.output.appendHtml(f"<font color=red><b>{buf}</b></font>")
+            self.output.appendOutput(buf, "red", True)
         else:
             self.output.appendPlainText(buf)
 
     def trainStatus(self, status: int, info: str):
-        if status == "0":
-            InfoBar.success("训练完成", f"可查看结果{TRAIN_OUTPUT}", duration=3000, parent=self)
+        if status == "0":  # train success
+            self.output.appendPlainText("\n")
+            self.output.printFinal()
+            InfoBar.success(
+                "训练完成",
+                f"可查看结果{self.output.outputFile}",
+                duration=3000,
+                parent=self,
+            )
             if cfg.openWhenDone:
                 qurl = QUrl.fromLocalFile(cfg.files["outputFolder"])
                 QDesktopServices.openUrl(qurl)
-        elif status == "1":
-            warning = "请检查midi文件是否符合规范或参数是否正确\n此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
-            warning += f"错误信息: {info}"
+
+        elif status == "1":  # train failed
+            warning = "请检查midi文件是否符合规范或参数是否正确\n" "此解析不兼容转调变速，同时需要使用midiEditor导出文件！\n"
+            warning += "错误信息: " + info.replace("\n", " ")
             box = MessageBox("训练失败", warning, parent=self)
-            box.exec_()
-        elif status == "2":
+            box.exec()
+
+        elif status == "2":  # train stopped
             InfoBar.warning("训练已终止", "训练被用户打断", duration=3000, parent=self)
+
         self.startBtn.setEnabled(True)
         self.stopBtn.setVisible(False)
 
@@ -218,7 +218,7 @@ class TrainConnectionThread(QThread):
             args=(
                 self.send,
                 parent.refName,
-                outputPath(),
+                parent.output.outputPath,
                 parent.population,
                 parent.mutation,
                 parent.iteration,
@@ -283,7 +283,6 @@ class TrainProcess:
 
             s.save_midi(outputFile)
             print(f"Time cost: {time() - t_start}s")
-            print(f"Result saved to {outputFile}")
             connect.send(Protocol("status", "0"))
 
         except Exception as e:

@@ -19,7 +19,7 @@ class Configuration(metaclass=Singleton):
 
     DIR = "rsc/config"
     NAME = "__ui_config__.pkl"
-    PATH = os.path.join(DIR, NAME)
+    PATH = os.path.join(DIR, NAME).replace("\\", "/")
 
     def __init__(self):
         """Default configuration"""
@@ -28,7 +28,7 @@ class Configuration(metaclass=Singleton):
             "themeColor": "#0078D7",
         }
         self.files = {
-            "outputFolder": os.getcwd() + "\\midi\\",
+            "outputFolder": os.getcwd().replace("\\", "/") + "/midi/",
             "trainReference": None,
             "parseMidi": None,
         }

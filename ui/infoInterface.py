@@ -186,8 +186,8 @@ class PersonalizationCard(MyCard):
         path = QFileDialog.getExistingDirectory(
             self, "导出至", "", QFileDialog.ShowDirsOnly
         )
-        cfg.files["outputFolder"] = path
-        self.outputCaption.setText(path)
+        cfg.files["outputFolder"] = path + "/"
+        self.outputCaption.setText(path + "/")
 
     def openOutputSlot(self, checked: bool):
         cfg.openWhenDone = checked

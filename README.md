@@ -45,5 +45,6 @@ python ./main.py
 
 If you find an error message box, you probably need to install some third party modules. See the build section above. Enjoy it!
 
-# License
+## License
+
 MIT

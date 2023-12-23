@@ -118,7 +118,7 @@ class ParseInterface(QWidget):
         cfg.files["parseMidi"] = self.filename
 
         try:
-            self._parseMidi()
+            self.parseMidi()
             InfoBar.success("解析完成！", "请查看你的midi文件夹", duration=3000, parent=self)
             if cfg.openWhenDone:
                 qurl = QUrl.fromLocalFile(cfg.files["outputFolder"])
@@ -130,37 +130,28 @@ class ParseInterface(QWidget):
             wrongBox = MessageBox("解析失败", warning, self)
             wrongBox.exec()
 
-    def _parseMidi(self):
+    def parseMidi(self):
         filename = cfg.files["outputFolder"] + "parse.txt"
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         midi = Midi.from_midi(self.filename)
 
-        output = "####################\n"
         header = midi.brief_info()
-        output += header
-        output += "####################\n"
-        for line in output.split("\n"):
-            self.output.appendOutput(line, "green", True)
+        for line in header.split("\n"):
+            self.output.appendLine(line, "green", True)
 
-        for idx, track in enumerate(midi.tracks):
-            output += "========================\n"
-            output += "Track " + str(idx + 1) + "\n"
-            output += "instrument: " + str(track.instrument) + "\n"
-            output += "========================\n\n"
-            output += str(track)
-            output += "\n"
-
-        for line in output.split("\n")[len(header.split("\n")) + 1 :]:
+        info = str(midi)
+        for line in info.split("\n"):
             if line.startswith(("Track", "=========")):
-                self.output.appendOutput(line, "red", True)
+                self.output.appendLine(line, "red", True)
             elif line.startswith("instrument"):
-                self.output.appendOutput(line, "red")
+                self.output.appendLine(line, "red")
             elif line.startswith("-----"):
-                self.output.appendOutput(line, "blue", True)
+                self.output.appendLine(line, "blue", True)
             else:
                 self.output.appendPlainText(line)
 
         self.output.printFinal()
 
         with open(filename, "w") as f:
-            f.write(output)
+            f.write(header)
+            f.write(info)

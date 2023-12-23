@@ -170,9 +170,9 @@ class TrainInterface(QWidget):
         if buf == "\n":
             return
         elif buf.startswith("----"):
-            self.output.appendOutput(buf, "blue", True)
+            self.output.appendLine(buf, "blue", True)
         elif buf.startswith(("[!]", "Final")):
-            self.output.appendOutput(buf, "red", True)
+            self.output.appendLine(buf, "red", True)
         else:
             self.output.appendPlainText(buf)
 
@@ -203,7 +203,48 @@ class TrainInterface(QWidget):
         self.stopBtn.setVisible(False)
 
 
+class ParameterWindow(MessageBoxBase):
+    """Custom message box"""
+
+    def __init__(self, parent: TrainInterface = None):
+        super().__init__(parent)
+        self.form = QFormLayout()
+
+        self.populationLabel = BodyLabel("种群数量")
+        self.populationEdit = SpinBox()
+        self.populationEdit.setValue(parent.population)
+
+        self.mutationLabel = BodyLabel("变异率")
+        self.mutationEdit = DoubleSpinBox()
+        self.mutationEdit.setRange(0, 1)
+        self.mutationEdit.setSingleStep(0.1)
+        self.mutationEdit.setValue(parent.mutation)
+
+        self.iterationLabel = BodyLabel("迭代次数")
+        self.iterationEdit = SpinBox()
+        self.iterationEdit.setRange(1, 10000)
+        self.iterationEdit.setSingleStep(100)
+        self.iterationEdit.setValue(parent.iteration)
+
+        self.companyLabel = BodyLabel("伴奏")
+        self.companyEdit = SwitchButton()
+        self.companyEdit.setChecked(parent.withCompany)
+        self.withCompany = parent.withCompany
+        self.companyEdit.checkedChanged.connect(self.updateCommpany)
+
+        self.form.addRow(self.populationLabel, self.populationEdit)
+        self.form.addRow(self.mutationLabel, self.mutationEdit)
+        self.form.addRow(self.iterationLabel, self.iterationEdit)
+        self.form.addRow(self.companyLabel, self.companyEdit)
+        self.viewLayout.addLayout(self.form)
+
+    def updateCommpany(self, choose: bool):
+        self.withCompany = choose
+
+
 class TrainConnectionThread(QThread):
+    """Thread for connection between the training process and the UI"""
+
     trainStatus = pyqtSignal(str, str)
     outputBuf = pyqtSignal(str)
 
@@ -244,6 +285,8 @@ class TrainConnectionThread(QThread):
 
 
 class Protocol:
+    """Protocol between the training process and the UI."""
+
     def __init__(self, msg_type: str, value: str, info: str = None):
         self.type = msg_type
         self.value = value
@@ -251,6 +294,8 @@ class Protocol:
 
 
 class TrainProcess:
+    """Multiprocessing process for training."""
+
     @staticmethod
     def run(
         connect: PipeConnection,
@@ -293,6 +338,8 @@ class TrainProcess:
 
 
 class RedirectStdout:
+    """IO redirection for the training process"""
+
     def __init__(self, connect: PipeConnection):
         self.stdout = sys.stdout
         self.connect = connect
@@ -302,42 +349,3 @@ class RedirectStdout:
 
     def flush(self):
         pass
-
-
-class ParameterWindow(MessageBoxBase):
-    """Custom message box"""
-
-    def __init__(self, parent: TrainInterface = None):
-        super().__init__(parent)
-        self.form = QFormLayout()
-
-        self.populationLabel = BodyLabel("种群数量")
-        self.populationEdit = SpinBox()
-        self.populationEdit.setValue(parent.population)
-
-        self.mutationLabel = BodyLabel("变异率")
-        self.mutationEdit = DoubleSpinBox()
-        self.mutationEdit.setRange(0, 1)
-        self.mutationEdit.setSingleStep(0.1)
-        self.mutationEdit.setValue(parent.mutation)
-
-        self.iterationLabel = BodyLabel("迭代次数")
-        self.iterationEdit = SpinBox()
-        self.iterationEdit.setRange(1, 10000)
-        self.iterationEdit.setSingleStep(100)
-        self.iterationEdit.setValue(parent.iteration)
-
-        self.companyLabel = BodyLabel("伴奏")
-        self.companyEdit = SwitchButton()
-        self.companyEdit.setChecked(parent.withCompany)
-        self.withCompany = parent.withCompany
-        self.companyEdit.checkedChanged.connect(self.updateCommpany)
-
-        self.form.addRow(self.populationLabel, self.populationEdit)
-        self.form.addRow(self.mutationLabel, self.mutationEdit)
-        self.form.addRow(self.iterationLabel, self.iterationEdit)
-        self.form.addRow(self.companyLabel, self.companyEdit)
-        self.viewLayout.addLayout(self.form)
-
-    def updateCommpany(self, choose: bool):
-        self.withCompany = choose

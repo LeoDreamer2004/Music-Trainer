@@ -8,6 +8,8 @@ from .config import cfg
 
 
 class OutputEdit(PlainTextEdit):
+    """Common output text edit"""
+
     def __init__(self, outputFile: str, parent=None):
         super().__init__(parent)
         self.outputFile = outputFile
@@ -19,7 +21,7 @@ class OutputEdit(PlainTextEdit):
     def outputPath(self) -> str:
         return cfg.files["outputFolder"] + self.outputFile
 
-    def appendOutput(self, output: str, color: str = None, bold: bool = False) -> None:
+    def appendLine(self, output: str, color: str = None, bold: bool = False) -> None:
         html = output
         if color is not None:
             realColor = self.translateColor(color)
@@ -30,7 +32,7 @@ class OutputEdit(PlainTextEdit):
 
     def printFinal(self):
         finalLine = "Finished. Result saved to " + self.outputPath
-        self.appendOutput(finalLine, "green", True)
+        self.appendLine(finalLine, "green", True)
 
     def translateColor(self, color: str):
         """Translate the color to the corresponding color in the theme.

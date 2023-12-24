@@ -1,10 +1,7 @@
-import sys
 from abc import ABCMeta, abstractmethod
 from random import random
 from typing import List
 from midoWrapper import *
-
-sys.path.append("..")
 
 
 def choice_with_weight(choices_list: List, weighted_list: List[float]):
@@ -79,4 +76,4 @@ class TrackGABase(metaclass=ABCMeta):
 
     @abstractmethod
     def run(self, generation):
-        pass
+        raise NotImplementedError

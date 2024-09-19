@@ -1,0 +1,4 @@
+__pycache__/
+*/__pycache__/
+/rsc/config/*
+/midi/result.mid
